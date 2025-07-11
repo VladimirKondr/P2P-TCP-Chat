@@ -1,0 +1,14 @@
+CompileFlags:
+  CompilationDatabase: compile_commands.json
+Index:
+  Background: Skip
+  External: None
+  Threads: 2
+Diagnostics:
+  UnusedIncludes: Strict
+  ClangTidy:
+    Add: []
+    Remove: [bugprone-infinite-loop]
+Ignore:
+  - .clangd-ignore
+
