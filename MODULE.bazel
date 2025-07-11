@@ -1,0 +1,18 @@
+module(name = "p2p-tcp-chat", version = "0.1")
+
+bazel_dep(name = "rules_cc", version = "0.0.1")
+bazel_dep(name = "protobuf", version = "3.19.0")
+
+bazel_dep(name = "googletest", version = "1.17.0")
+bazel_dep(name = "google_benchmark", version = "1.9.4")
+
+bazel_dep(name = "postgres", version = "16.2")
+
+bazel_dep(name = "boost.asio", version = "1.87.0.bcr.1")
+bazel_dep(name = "boost.program_options", version = "1.87.0")
+bazel_dep(name = "boost.filesystem", version = "1.87.0")
+bazel_dep(name = "boost.algorithm", version = "1.87.0")
+bazel_dep(name = "boost.range", version = "1.87.0")
+bazel_dep(name = "boost.serialization", version = "1.87.0")
+bazel_dep(name = "boost.beast", version = "1.87.0.bcr.1")
+bazel_dep(name = "boost.uuid", version = "1.87.0")
