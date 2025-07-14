@@ -1,14 +1,28 @@
 CompileFlags:
+  Add: 
+    - -std=c++20
+    - -Wall
+    - -isystem/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include
+    - -isystem/Library/Developer/CommandLineTools/usr/include/c++/v1
+    - -isystem/usr/local/include
   CompilationDatabase: compile_commands.json
+
 Index:
-  Background: Skip
-  External: None
-  Threads: 2
+  StandardLibrary: Yes
+  Background: Build
+
 Diagnostics:
-  UnusedIncludes: Strict
   ClangTidy:
-    Add: []
-    Remove: [bugprone-infinite-loop]
+    Add: modernize*,performance*,readability*
+    Remove: modernize-use-trailing-return-type
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+
+Hover:
+  ShowAKA: Yes
 Ignore:
   - .clangd-ignore
 

@@ -1,0 +1,19 @@
+cc_binary(
+    name = "main",
+    srcs = ["src/main.cpp"],
+    deps = [
+        "@boost.asio",
+    ],
+    copts = ["-std=c++20"]
+)
+
+cc_test(
+    name = "test_gtest",
+    srcs = ["tests/test_gtest.cpp"],
+    deps = [
+        "@boost.asio",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+    copts = ["-std=c++20"]
+)

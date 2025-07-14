@@ -16,3 +16,12 @@ bazel_dep(name = "boost.range", version = "1.87.0")
 bazel_dep(name = "boost.serialization", version = "1.87.0")
 bazel_dep(name = "boost.beast", version = "1.87.0.bcr.1")
 bazel_dep(name = "boost.uuid", version = "1.87.0")
+
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "4f28899",
+)

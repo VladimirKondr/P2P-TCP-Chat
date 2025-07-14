@@ -1,0 +1,5 @@
+InheritParentConfig: true
+
+Checks: '-fuchsia-statically-constructed-objects,
+         -cert-err58-cpp,
+         -cppcoreguidelines-owning-memory'

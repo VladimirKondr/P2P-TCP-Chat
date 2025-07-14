@@ -85,3 +85,4 @@ CheckOptions:
     value: ^(begin|end)$
   - key: readability-identifier-naming.TypeAliasIgnoredRegexp
     value: ^(iterator_category|value_type|difference_type|pointer|reference|iterator_type|iterator_concept)$
+SystemHeaders: true
