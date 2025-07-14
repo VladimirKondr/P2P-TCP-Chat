@@ -1,0 +1,9 @@
+cc_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    deps = [
+        "@boost.asio",
+    ],
+    copts = ["-std=c++20"]
+)
+
