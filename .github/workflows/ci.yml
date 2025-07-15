@@ -1,4 +1,4 @@
-name: P2P Chat CICD testing pipeline
+name: P2P Chat CICD pipeline
 on: [push, pull_request]
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
         run: |
           sudo ./.github/scripts/install-compiler.sh
         
-          
+
       - name: Fix apt cache permissions for saving
         run: sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
       - name: Install Bazel
