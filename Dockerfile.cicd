@@ -13,12 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     curl \
     gnupg \
+    ca-certificates \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 ARG BAZEL_VERSION=8.3.1
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates wget && \
-    wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -O /usr/local/bin/bazel && \
+RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -O /usr/local/bin/bazel && \
     chmod +x /usr/local/bin/bazel && \
     rm -rf /var/lib/apt/lists/*
 
