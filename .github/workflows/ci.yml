@@ -18,7 +18,8 @@ jobs:
               run: |
                 curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
                 sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-                sudo apt update && sudo apt install bazel
+                sudo apt-get update
+                sudo apt-get install bazel
 
             - name: Verify Bazel Version
               run: bazel --version
