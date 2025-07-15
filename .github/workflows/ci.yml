@@ -65,7 +65,9 @@ jobs:
     name: Backend Lint & Format
     runs-on: ubuntu-latest
     needs: build-docker
-    container: ${{ needs.build-docker.outputs.image_name }}
+    container:
+      image: ${{ needs.build-docker.outputs.image_name }}
+      options: --user 1001
     steps:
       - name: Check out code
         uses: actions/checkout@v4
