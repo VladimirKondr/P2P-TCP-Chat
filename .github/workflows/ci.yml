@@ -1,18 +1,20 @@
-name: CICD for P2P Chat
-run-name: ${{ github.actor }} is running cicd pipeline
-on: [push]
+name: P2P Chat CICD testing pipeline
+on: [push, pull_request]
 jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+    testing:
+        name: Building and tesing
+        runs-on: ubuntu-latest
+        steps:
+            - name: Install essentials
+              run: sudo apt-get update && sudo apt-get install -y clang-format clang-tidy bazel
+            
+            - name: Build project
+              run: sudo bazel build --config=debug \
+                                    --config=gcc11
+                                    --config=clang-format \
+                                    --config=clang-tidy \
+                                    --config=ubsan \
+                                    --config=asan \
+                                    --config=ci
+            - name: Testing
+              run: sudo bazel test :all
