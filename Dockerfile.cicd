@@ -20,7 +20,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates wget && \
     wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -O /usr/local/bin/bazel && \
     chmod +x /usr/local/bin/bazel && \
-    apt-get purge -y --auto-remove ca-certificates wget && \
     rm -rf /var/lib/apt/lists/*
 
 RUN useradd --create-home --shell /bin/bash runner
