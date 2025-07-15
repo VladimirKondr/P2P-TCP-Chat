@@ -6,8 +6,20 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Install essentials
-              run: sudo apt-get update && sudo apt-get install -y clang-format clang-tidy bazel
+              run: sudo apt-get update && sudo apt-get install -y clang-format \
+                                                                    clang-tidy \
+                                                                    apt-transport-https \
+                                                                    curl \
+                                                                    gnupg
+            - name: Fetch Bazel
+              run: curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
             
+            - name: Move directory
+              run: sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+            
+            - name: Install Bazel
+              run: sudo apt update && sudo apt install bazel
+
             - name: Build project
               run: sudo bazel build --config=debug \
                                     --config=gcc11
