@@ -1,42 +1,49 @@
 name: P2P Chat CICD pipeline
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Concurrency setting to cancel in-progress runs on the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   backend-lint:
     name: Backend Lint & Format
     runs-on: ubuntu-latest
+    # Use the container we built. We tag with `main` as it's our stable CI image.
+    # The ${{ github.repository }} variable makes it portable.
+    container: ghcr.io/${{ github.repository }}/cicd-image:main
     steps:
-      - uses: actions/checkout@v4
-      - uses: bazel-contrib/setup-bazel@0.15.0
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # We no longer install Bazel, but this action is still the best way to set up the caches.
+      - name: Setup Bazel Caches
+        uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
       
-      - name: Prepare apt cache directory
-        run: |
-          sudo mkdir -p /var/cache/apt/archives
-          sudo chown -R $(whoami):$(whoami) /var/cache/apt
-
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-linters-${{ hashFiles('.github/scripts/install-linters.sh') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-linters-
-      - name: Install essentials and fix permissions
-        run: |
-          sudo ./.github/scripts/install-linters.sh
-      - name: Fix apt cache permissions for saving
-        run: sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
+      # The linting commands are unchanged, but they now run inside the container.
       - name: Check Code Formatting (clang-format)
-        run: bazel build --config=clang-format //...
+        run: bazel test --config=clang-format //...
+
       - name: Run Static Analysis (clang-tidy)
-        run: bazel build --config=clang-tidy //...
+        run: bazel test --config=clang-tidy //...
 
   backend-build-and-test:
     name: Backend Build & Test (${{ matrix.config }})
-    needs: backend-lint
     runs-on: ubuntu-latest
+    # The container is used for the entire matrix.
+    container: ghcr.io/${{ github.repository }}/cicd-image:main
     strategy:
       fail-fast: false
       matrix:
@@ -44,43 +51,25 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-    
-      - name: Prepare apt cache directory
-        run: |
-          sudo mkdir -p /var/cache/apt/archives
-          sudo chown -R $(whoami):$(whoami) /var/cache/apt
 
-      - name: Cache apt compiler
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-compiler-${{ hashFiles('.github/scripts/install-compiler.sh') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-compiler-
-            
-      - name: Install compiler and fix permissions
-        run: |
-          sudo ./.github/scripts/install-compiler.sh
-        
-
-      - name: Fix apt cache permissions for saving
-        run: sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
-      - name: Install Bazel
+      # Again, just use this action for its excellent caching capabilities.
+      - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
           disk-cache: true
           repository-cache: true
-          
-      - name: Verify Bazel Version
+      
+      - name: Verify Bazel Version (from container)
         run: bazel --version
         
       - name: Build and Run Tests (${{ matrix.config }})
         run: bazel test --config=ci --config=${{ matrix.config }} //...
 
   build-and-test-frontend:
-    name: Building and testing frontend
+    name: Frontend Build & Test
     runs-on: ubuntu-latest
+    # No changes needed for the frontend job
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -107,7 +96,7 @@ jobs:
         run: flutter test
         working-directory: p2p_chat_client
 
-      - name: Build apk
-        if: github.event_name == 'pull_request' || github.ref == 'refs/main'
+      - name: Build APK for main branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: flutter build apk
         working-directory: p2p_chat_client

@@ -1,0 +1,36 @@
+# Use a specific, stable base image for reproducibility. Ubuntu 22.04 LTS is a great choice.
+FROM ubuntu:22.04
+
+# Avoid prompts from apt during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install all dependencies in a single layer to optimize image size.
+# This includes the compiler (clang), linters (clang-tidy, clang-format),
+# and tools needed to install Bazel (wget, unzip).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    clang-21 \
+    clang-tidy-21 \
+    clang-format-21 \
+    git \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set clang-21 as the default C/C++ compiler and toolchain
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 && \
+    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 && \
+    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
+
+# Install a specific version of Bazel for reproducibility
+# Check for the latest version at https://github.com/bazelbuild/bazel/releases
+ARG BAZEL_VERSION=7.1.1
+RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -O /usr/local/bin/bazel && \
+    chmod +x /usr/local/bin/bazel
+
+# Create a non-root user to run the build, which is a security best practice.
+# GitHub Actions will automatically map the workspace to this user.
+RUN useradd --create-home --shell /bin/bash runner
+USER runner
+WORKDIR /home/runner/work
