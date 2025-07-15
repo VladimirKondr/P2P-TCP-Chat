@@ -2,7 +2,7 @@ name: P2P Chat CICD testing pipeline
 on: [push, pull_request]
 jobs:
     build-and-test-backend:
-        name: Building and tesing
+        name: Building and testing backend
         runs-on: ubuntu-latest
         steps:
             - name: Check out code
@@ -46,4 +46,28 @@ jobs:
             - name: Run Tests (Thread Sanitizer (TSan))
               run: bazel test --config=ci --config=tsan //...
 
-    #build-and-test-frontend:
+    build-and-test-frontend:
+        name: Building and testing frontend
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out code
+              uses: actions/checkout@v4
+
+            - name: Setup Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                channel: 'stable'
+            - name: Install dependencies
+              run: flutter pub get
+            
+            - name: Verify formatting
+              run: dart format --output=none --set-exit-if-changed .
+            
+            - name: Analyze project source
+              run: flutter analyze --fatal-warnings
+
+            - name: Run tests
+              run: flutter test
+
+            - name: Build apk
+              run: flutter build apk
