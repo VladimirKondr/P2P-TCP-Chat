@@ -1,5 +1,8 @@
 FROM ubuntu:22.04
 
+RUN groupadd --gid 1001 runner && \
+    useradd --uid 1001 --gid 1001 --create-home --shell /bin/bash runner
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
