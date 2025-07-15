@@ -1,32 +1,42 @@
 name: P2P Chat CICD testing pipeline
 on: [push, pull_request]
 jobs:
-    testing:
+    build-and-test:
         name: Building and tesing
         runs-on: ubuntu-latest
         steps:
+            - name: Check out code
+              uses: actions/checkout@v4
             - name: Install essentials
-              run: sudo apt-get update && sudo apt install -y clang-format \
+              run: |
+                sudo apt-get update && sudo apt-get install -y clang-format \
                                                                     clang-tidy \
                                                                     apt-transport-https \
                                                                     curl \
                                                                     gnupg
-            - name: Fetch Bazel
-              run: curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
-            
-            - name: Move directory
-              run: sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-            
             - name: Install Bazel
-              run: sudo apt update && sudo apt install bazel
+              run: |
+                curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+                sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+                sudo apt update && sudo apt install bazel
 
-            - name: Build project
-              run: sudo bazel build --config=debug \
-                                    --config=gcc11 \
-                                    --config=clang-format \
-                                    --config=clang-tidy \
-                                    --config=ubsan \
-                                    --config=asan \
-                                    --config=ci
-            - name: Testing
-              run: sudo bazel test :all
+            - name: Verify Bazel Version
+              run: bazel --version
+
+            - name: Check Code Formatting (clang-format)
+              run: bazel build --config=clang-format //...
+
+            - name: Run Static Analysis (clang-tidy)
+              run: bazel build --config=clang-tidy //...
+      
+            - name: Build Project (Debug)
+              run: bazel build --config=ci --config=debug //...
+
+            - name: Run Tests (Default)
+              run: bazel test --config=ci --config=debug //...
+
+            - name: Run Tests (Address Sanitizer)
+              run: bazel test --config=ci --config=asan //...
+
+            - name: Run Tests (Undefined Behavior Sanitizer)
+              run: bazel test --config=ci --config=ubsan //...
