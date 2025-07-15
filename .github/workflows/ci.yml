@@ -6,10 +6,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Install essentials
-              run: sudo apt-get update && sudo apt install -y clang-format \
-                                                                    clang-tidy \
-                                                                    apt-transport-https \
-                                                                    curl \
+              run: sudo apt-get update && sudo apt install -y clang-format /
+                                                                    clang-tidy /
+                                                                    apt-transport-https /
+                                                                    curl /
                                                                     gnupg
             - name: Fetch Bazel
               run: curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
@@ -21,12 +21,12 @@ jobs:
               run: sudo apt update && sudo apt install bazel
 
             - name: Build project
-              run: sudo bazel build --config=debug \
-                                    --config=gcc11
-                                    --config=clang-format \
-                                    --config=clang-tidy \
-                                    --config=ubsan \
-                                    --config=asan \
+              run: sudo bazel build --config=debug /
+                                    --config=gcc11 /
+                                    --config=clang-format /
+                                    --config=clang-tidy /
+                                    --config=ubsan /
+                                    --config=asan /
                                     --config=ci
             - name: Testing
               run: sudo bazel test :all
