@@ -3,9 +3,9 @@ build --repo_env=CC=clang
 build --repo_env=CXX=clang++
 
 
-build --disk_cache=~/.cache/shared_bazel_action_cache/
-test --disk_cache=~/.cache/shared_bazel_action_cache/
-run --disk_cache=~/.cache/shared_bazel_action_cache/
+#build --disk_cache=~/.cache/shared_bazel_action_cache/
+#test --disk_cache=~/.cache/shared_bazel_action_cache/
+#run --disk_cache=~/.cache/shared_bazel_action_cache/
 
 
 test --test_verbose_timeout_warnings
@@ -129,7 +129,7 @@ test:ubsan --copt -fno-omit-frame-pointer
 
 # Stream stdout/stderr output from each test in real-time.
 # Docs: https://bazel.build/docs/user-manual#test-output
-test:debug --test_output=streamed
+test:debug --test_output=errors
 
 # Run one test at a time.
 # Docs: https://bazel.build/reference/command-line-reference#flag--test_strategy
@@ -141,7 +141,7 @@ test:debug --test_timeout=9999
 
 # Always run tests even if they have cached results.
 # Docs: https://bazel.build/docs/user-manual#cache-test-results
-test:debug --nocache_test_results
+#test:debug --nocache_test_results
 
 build:debug --copt -O2
 test:debug --copt -O2
