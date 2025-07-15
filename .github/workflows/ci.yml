@@ -1,7 +1,7 @@
 name: P2P Chat CICD testing pipeline
 on: [push, pull_request]
 jobs:
-    build-and-test:
+    build-and-test-backend:
         name: Building and tesing
         runs-on: ubuntu-latest
         steps:
@@ -42,3 +42,8 @@ jobs:
 
             - name: Run Tests (Undefined Behavior Sanitizer)
               run: bazel test --config=ci --config=ubsan //...
+            
+            - name: Run Tests (Thread Sanitizer (TSan))
+              run: bazel test --config=ci --config=tsan //...
+
+    #build-and-test-frontend:

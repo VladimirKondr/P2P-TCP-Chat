@@ -111,11 +111,16 @@ build:msan --host_linkopt=-fuse-ld=lld
 # Use `bazel build --config=ubsan` to enable these settings #
 #############################################################
 
+build:ubsan --features=undefined_behavior_sanitizer
+test:ubsan --features=undefined_behavior_sanitizer
+
 build:ubsan --action_env=UBSAN_OPTIONS=print_stacktrace=1
 build:ubsan --strip=never
-build:ubsan --copt -fsanitize=undefined
 build:ubsan --copt -fno-omit-frame-pointer
-build:ubsan --linkopt -fsanitize=undefined
+
+test:ubsan --action_env=UBSAN_OPTIONS=print_stacktrace=1
+test:ubsan --strip=never
+test:ubsan --copt -fno-omit-frame-pointer
 
 # Debug
 ############################################################
