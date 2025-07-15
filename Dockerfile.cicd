@@ -25,6 +25,5 @@ RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/
     chmod +x /usr/local/bin/bazel && \
     rm -rf /var/lib/apt/lists/*
 
-RUN useradd --create-home --shell /bin/bash runner
 USER runner
 WORKDIR /home/runner/work
