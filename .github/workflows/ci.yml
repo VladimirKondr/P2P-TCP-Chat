@@ -21,7 +21,6 @@ jobs:
       - name: Install essentials and fix permissions
         run: |
           sudo ./.github/scripts/install-linters.sh
-          sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
       - name: Check Code Formatting (clang-format)
         run: bazel build --config=clang-format //...
       - name: Run Static Analysis (clang-tidy)
@@ -50,7 +49,6 @@ jobs:
       - name: Install compiler and fix permissions
         run: |
           sudo ./.github/scripts/install-compiler.sh
-          sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
           
       - name: Install Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
