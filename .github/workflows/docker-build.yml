@@ -2,10 +2,8 @@ name: Build and Push CI Image
 
 on:
   push:
-    branches:
-      - main
     paths:
-      - 'Dockerfile.cicd' # Only run on changes to the Dockerfile
+      - 'Dockerfile.cicd'
   pull_request:
     paths:
       - 'Dockerfile.cicd'
