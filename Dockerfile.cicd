@@ -9,19 +9,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 # and tools needed to install Bazel (wget, unzip).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    clang-21 \
-    clang-tidy-21 \
-    clang-format-21 \
+    clang-19 \
+    clang-tidy-19 \
+    clang-format-19 \
     git \
     wget \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Set clang-21 as the default C/C++ compiler and toolchain
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 && \
-    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 && \
-    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
+# Set clang-19 as the default C/C++ compiler and toolchain
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100 && \
+    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 100 && \
+    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 100
 
 # Install a specific version of Bazel for reproducibility
 # Check for the latest version at https://github.com/bazelbuild/bazel/releases
