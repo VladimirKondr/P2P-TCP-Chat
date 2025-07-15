@@ -15,14 +15,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     wget \
     unzip \
+    apt-transport-https \
+    curl \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 
 # Install a specific version of Bazel for reproducibility
 # Check for the latest version at https://github.com/bazelbuild/bazel/releases
-ARG BAZEL_VERSION=7.1.1
-RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -O /usr/local/bin/bazel && \
-    chmod +x /usr/local/bin/bazel
+ARG BAZEL_VERSION=8.1.1
+RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+RUN sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+RUN sudo apt install bazel-{BAZEL_VERSION}
 
 # Create a non-root user to run the build, which is a security best practice.
 # GitHub Actions will automatically map the workspace to this user.
