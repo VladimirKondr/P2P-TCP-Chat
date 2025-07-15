@@ -1,10 +1,11 @@
 name: P2P Chat CICD testing pipeline
 on: [push, pull_request]
+
 jobs:
-    backend-lint:
-      name: Backend Lint & Format
-      runs-on: ubuntu-latest
-      steps:
+  backend-lint:
+    name: Backend Lint & Format
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v4
       - uses: bazel-contrib/setup-bazel@0.15.0
         with:
@@ -26,70 +27,74 @@ jobs:
       - name: Run Static Analysis (clang-tidy)
         run: bazel build --config=clang-tidy //...
 
-    backend-build-and-test:
-        name: Backend Build & Test (${{ matrix.config }})
-        needs: backend-lint
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false # Do not cancel other tests if one test fails
-            matrix:
-            config: [debug, asan, ubsan, tsan]
-        steps:
-            - uses: actions/checkout@v4
+  backend-build-and-test:
+    name: Backend Build & Test (${{ matrix.config }})
+    needs: backend-lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [debug, asan, ubsan, tsan]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
 
-            - name: Cache apt compiler
-            uses: actions/cache@v4
-            with:
-                path: /var/cache/apt/archives
-                key: ${{ runner.os }}-apt-compiler-${{ hashFiles('.github/scripts/install-compiler.sh') }}
-                restore-keys: |
-                ${{ runner.os }}-apt-compiler-
-                
-            - name: Install compiler and fix permissions
-            run: |
-                sudo ./.github/scripts/install-compiler.sh
-                sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
-            - name: Install Bazel
-            uses: bazel-contrib/setup-bazel@0.15.0
-            with:
-                bazelisk-cache: true
-                disk-cache: true
-                repository-cache: true
-            - name: Verify Bazel Version
-            run: bazel --version
-            - name: Build and Run Tests (${{ matrix.config }})
-            run: bazel test --config=ci --config=${{ matrix.config }} //...
+      - name: Cache apt compiler
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-compiler-${{ hashFiles('.github/scripts/install-compiler.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-compiler-
+            
+      - name: Install compiler and fix permissions
+        run: |
+          sudo ./.github/scripts/install-compiler.sh
+          sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
+          
+      - name: Install Bazel
+        uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+          
+      - name: Verify Bazel Version
+        run: bazel --version
+        
+      - name: Build and Run Tests (${{ matrix.config }})
+        run: bazel test --config=ci --config=${{ matrix.config }} //...
 
-        build-and-test-frontend:
-        name: Building and testing frontend
-        runs-on: ubuntu-latest
-        steps:
-            - name: Check out code
-            uses: actions/checkout@v4
+  build-and-test-frontend:
+    name: Building and testing frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
 
-            - name: Setup Flutter
-            uses: subosito/flutter-action@v2
-            with:
-                channel: 'stable'
-                cache: true
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
 
-            - name: Install dependencies
-            run: flutter pub get
-            working-directory: p2p_chat_client
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: p2p_chat_client
 
-            - name: Verify formatting
-            run: dart format --output=none --set-exit-if-changed .
-            working-directory: p2p_chat_client
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+        working-directory: p2p_chat_client
 
-            - name: Analyze project source
-            run: flutter analyze --fatal-warnings
-            working-directory: p2p_chat_client
+      - name: Analyze project source
+        run: flutter analyze --fatal-warnings
+        working-directory: p2p_chat_client
 
-            - name: Run tests
-            run: flutter test
-            working-directory: p2p_chat_client
+      - name: Run tests
+        run: flutter test
+        working-directory: p2p_chat_client
 
-            - name: Build apk
-            if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-            run: flutter build apk
-            working-directory: p2p_chat_client
+      - name: Build apk
+        if: github.event_name == 'pull_request' || github.ref == 'refs/main'
+        run: flutter build apk
+        working-directory: p2p_chat_client
