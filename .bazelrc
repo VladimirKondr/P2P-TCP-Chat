@@ -3,9 +3,9 @@ build --repo_env=CC=clang
 build --repo_env=CXX=clang++
 
 
-build --disk_cache=~/.cache/shared_bazel_action_cache/
-test --disk_cache=~/.cache/shared_bazel_action_cache/
-run --disk_cache=~/.cache/shared_bazel_action_cache/
+#build --disk_cache=~/.cache/shared_bazel_action_cache/
+#test --disk_cache=~/.cache/shared_bazel_action_cache/
+#run --disk_cache=~/.cache/shared_bazel_action_cache/
 
 
 test --test_verbose_timeout_warnings
@@ -111,11 +111,16 @@ build:msan --host_linkopt=-fuse-ld=lld
 # Use `bazel build --config=ubsan` to enable these settings #
 #############################################################
 
+build:ubsan --features=undefined_behavior_sanitizer
+test:ubsan --features=undefined_behavior_sanitizer
+
 build:ubsan --action_env=UBSAN_OPTIONS=print_stacktrace=1
 build:ubsan --strip=never
-build:ubsan --copt -fsanitize=undefined
 build:ubsan --copt -fno-omit-frame-pointer
-build:ubsan --linkopt -fsanitize=undefined
+
+test:ubsan --action_env=UBSAN_OPTIONS=print_stacktrace=1
+test:ubsan --strip=never
+test:ubsan --copt -fno-omit-frame-pointer
 
 # Debug
 ############################################################
@@ -124,7 +129,7 @@ build:ubsan --linkopt -fsanitize=undefined
 
 # Stream stdout/stderr output from each test in real-time.
 # Docs: https://bazel.build/docs/user-manual#test-output
-test:debug --test_output=streamed
+test:debug --test_output=errors
 
 # Run one test at a time.
 # Docs: https://bazel.build/reference/command-line-reference#flag--test_strategy
@@ -136,7 +141,7 @@ test:debug --test_timeout=9999
 
 # Always run tests even if they have cached results.
 # Docs: https://bazel.build/docs/user-manual#cache-test-results
-test:debug --nocache_test_results
+#test:debug --nocache_test_results
 
 build:debug --copt -O2
 test:debug --copt -O2
@@ -194,11 +199,9 @@ query:ci --noshow_progress
 query:ci --noshow_loading_progress
 fetch:ci --noshow_progress
 fetch:ci --noshow_loading_progress
-fetch:ci --show_task_finish
 fetch:ci --keep_going
 build:ci --noshow_progress
 build:ci --noshow_loading_progress
-build:ci --show_task_finish
 build:ci --action_env=PATH
 build:ci --keep_going
 build:ci --verbose_failures

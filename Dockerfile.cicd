@@ -1,0 +1,40 @@
+FROM ubuntu:22.04
+
+RUN groupadd --gid 1001 runner && \
+    useradd --uid 1001 --gid 1001 --create-home --shell /bin/bash runner
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    gnupg \
+    ca-certificates && \
+    \
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+    echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" > /etc/apt/sources.list.d/llvm.list && \
+    \
+    apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    clang-20 \
+    clang-tidy-20 \
+    clang-format-20 \
+    libclang-rt-20-dev \
+    git \
+    unzip \
+    apt-transport-https \
+    curl \
+    && \
+    \
+    ln -s /usr/bin/clang-20 /usr/bin/clang && \
+    ln -s /usr/bin/clang-tidy-20 /usr/bin/clang-tidy && \
+    ln -s /usr/bin/clang-format-20 /usr/bin/clang-format && \
+    \
+    rm -rf /var/lib/apt/lists/*
+
+ARG BAZEL_VERSION=8.3.1
+RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -O /usr/local/bin/bazel && \
+    chmod +x /usr/local/bin/bazel && \
+    rm -rf /var/lib/apt/lists/*
+
+USER runner
+WORKDIR /home/runner/work
