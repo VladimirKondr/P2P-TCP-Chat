@@ -1,49 +1,48 @@
 name: P2P Chat CICD testing pipeline
 on: [push, pull_request]
 jobs:
-    build-and-test-backend:
-        name: Building and testing backend
-        runs-on: ubuntu-latest
-        steps:
-            - name: Check out code
-              uses: actions/checkout@v4
-            - name: Install essentials
-              run: |
-                sudo apt-get update && sudo apt-get install -y clang-format \
-                                                                    clang-tidy \
-                                                                    apt-transport-https \
-                                                                    curl \
-                                                                    gnupg
-            - name: Install Bazel
-              uses: bazel-contrib/setup-bazel@0.15.0
-              with:
-                bazelisk-cache: true
-                disk-cache: ${{ github.workflow }}
-                repository-cache: true
+    backend-lint:
+      name: Backend Lint & Format
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          bazelisk-cache: true
 
-            - name: Verify Bazel Version
-              run: bazel --version
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-clang-${{ hashFiles('**/Dockerfile') }}
+      - name: Install essentials
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang-format clang-tidy
+      - name: Check Code Formatting (clang-format)
+        run: bazel build --config=clang-format //...
+      - name: Run Static Analysis (clang-tidy)
+        run: bazel build --config=clang-tidy //...
 
-            - name: Check Code Formatting (clang-format)
-              run: bazel build --config=clang-format //...
-
-            - name: Run Static Analysis (clang-tidy)
-              run: bazel build --config=clang-tidy //...
-      
-            - name: Build Project (Debug)
-              run: bazel build --config=ci --config=debug //...
-
-            - name: Run Tests (Default)
-              run: bazel test --config=ci --config=debug //...
-
-            - name: Run Tests (Address Sanitizer)
-              run: bazel test --config=ci --config=asan //...
-
-            - name: Run Tests (Undefined Behavior Sanitizer)
-              run: bazel test --config=ci --config=ubsan //...
-            
-            - name: Run Tests (Thread Sanitizer (TSan))
-              run: bazel test --config=ci --config=tsan //...
+    backend-build-and-test:
+      name: Backend Build & Test (${{ matrix.config }})
+      needs: backend-lint
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false # Не отменять другие тесты, если один упал
+        matrix:
+          config: [debug, asan, ubsan, tsan]
+      steps:
+        - uses: actions/checkout@v4
+        - name: Install Bazel
+          uses: bazel-contrib/setup-bazel@0.15.0
+          with:
+            bazelisk-cache: true
+            disk-cache: ${{ github.workflow }}-${{ matrix.config }}
+            repository-cache: true
+        - name: Verify Bazel Version
+          run: bazel --version
+        - name: Build and Run Tests (${{ matrix.config }})
+          run: bazel test --config=ci --config=${{ matrix.config }} //...
 
     build-and-test-frontend:
         name: Building and testing frontend
@@ -56,6 +55,7 @@ jobs:
               uses: subosito/flutter-action@v2
               with:
                 channel: 'stable'
+                cache: true
 
             - name: Install dependencies
               run: flutter pub get
@@ -74,5 +74,6 @@ jobs:
               working-directory: p2p_chat_client
 
             - name: Build apk
+              if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
               run: flutter build apk
               working-directory: p2p_chat_client
