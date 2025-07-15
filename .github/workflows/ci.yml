@@ -6,7 +6,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Install essentials
-              run: sudo apt-get update && sudo apt-get install -y clang-format \
+              run: sudo apt-get update && sudo apt install -y clang-format \
                                                                     clang-tidy \
                                                                     apt-transport-https \
                                                                     curl \
