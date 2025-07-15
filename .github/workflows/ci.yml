@@ -15,9 +15,12 @@ jobs:
         with:
           path: /var/cache/apt/archives
           key: ${{ runner.os }}-apt-clang-${{ hashFiles('**/Dockerfile') }}
-      - name: Install essentials
+          restore-keys: |
+            ${{ runner.os }}-apt-clang-
+      - name: Install essentials and fix permissions
         run: |
           sudo apt-get update && sudo apt-get install -y clang-format clang-tidy
+          sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
       - name: Check Code Formatting (clang-format)
         run: bazel build --config=clang-format //...
       - name: Run Static Analysis (clang-tidy)
@@ -28,7 +31,7 @@ jobs:
       needs: backend-lint
       runs-on: ubuntu-latest
       strategy:
-        fail-fast: false # Не отменять другие тесты, если один упал
+        fail-fast: false # Do not cancel other tests if one test fails
         matrix:
           config: [debug, asan, ubsan, tsan]
       steps:
@@ -37,7 +40,7 @@ jobs:
           uses: bazel-contrib/setup-bazel@0.15.0
           with:
             bazelisk-cache: true
-            disk-cache: ${{ github.workflow }}-${{ matrix.config }}
+            disk-cache: true
             repository-cache: true
         - name: Verify Bazel Version
           run: bazel --version
@@ -45,35 +48,35 @@ jobs:
           run: bazel test --config=ci --config=${{ matrix.config }} //...
 
     build-and-test-frontend:
-        name: Building and testing frontend
-        runs-on: ubuntu-latest
-        steps:
-            - name: Check out code
-              uses: actions/checkout@v4
+      name: Building and testing frontend
+      runs-on: ubuntu-latest
+      steps:
+        - name: Check out code
+          uses: actions/checkout@v4
 
-            - name: Setup Flutter
-              uses: subosito/flutter-action@v2
-              with:
-                channel: 'stable'
-                cache: true
+        - name: Setup Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            channel: 'stable'
+            cache: true
 
-            - name: Install dependencies
-              run: flutter pub get
-              working-directory: p2p_chat_client
-        
-            - name: Verify formatting
-              run: dart format --output=none --set-exit-if-changed .
-              working-directory: p2p_chat_client
-        
-            - name: Analyze project source
-              run: flutter analyze --fatal-warnings
-              working-directory: p2p_chat_client
+        - name: Install dependencies
+          run: flutter pub get
+          working-directory: p2p_chat_client
 
-            - name: Run tests
-              run: flutter test
-              working-directory: p2p_chat_client
+        - name: Verify formatting
+          run: dart format --output=none --set-exit-if-changed .
+          working-directory: p2p_chat_client
 
-            - name: Build apk
-              if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-              run: flutter build apk
-              working-directory: p2p_chat_client
+        - name: Analyze project source
+          run: flutter analyze --fatal-warnings
+          working-directory: p2p_chat_client
+
+        - name: Run tests
+          run: flutter test
+          working-directory: p2p_chat_client
+
+        - name: Build apk
+          if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+          run: flutter build apk
+          working-directory: p2p_chat_client
