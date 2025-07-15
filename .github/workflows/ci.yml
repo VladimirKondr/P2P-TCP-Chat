@@ -1,14 +1,7 @@
 name: P2P Chat CICD pipeline
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
-# Concurrency setting to cancel in-progress runs on the same PR/branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
@@ -17,14 +10,10 @@ jobs:
   backend-lint:
     name: Backend Lint & Format
     runs-on: ubuntu-latest
-    # Use the container we built. We tag with `main` as it's our stable CI image.
-    # The ${{ github.repository }} variable makes it portable.
     container: ghcr.io/${{ github.repository }}/cicd-image:main
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
-      # We no longer install Bazel, but this action is still the best way to set up the caches.
       - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
@@ -32,7 +21,6 @@ jobs:
           disk-cache: true
           repository-cache: true
       
-      # The linting commands are unchanged, but they now run inside the container.
       - name: Check Code Formatting (clang-format)
         run: bazel test --config=clang-format //...
 
@@ -42,7 +30,6 @@ jobs:
   backend-build-and-test:
     name: Backend Build & Test (${{ matrix.config }})
     runs-on: ubuntu-latest
-    # The container is used for the entire matrix.
     container: ghcr.io/${{ github.repository }}/cicd-image:main
     strategy:
       fail-fast: false
@@ -51,8 +38,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
-      # Again, just use this action for its excellent caching capabilities.
       - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
@@ -69,7 +54,6 @@ jobs:
   build-and-test-frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    # No changes needed for the frontend job
     steps:
       - name: Check out code
         uses: actions/checkout@v4
