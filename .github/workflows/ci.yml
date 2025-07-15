@@ -10,7 +10,7 @@ jobs:
   backend-lint:
     name: Backend Lint & Format
     runs-on: ubuntu-latest
-    container: ghcr.io/${{ github.repository }}/cicd-image:main
+    container: ghcr.io/vladimirkondr/p2p-tcp-chat/cicd-image:main
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
   backend-build-and-test:
     name: Backend Build & Test (${{ matrix.config }})
     runs-on: ubuntu-latest
-    container: ghcr.io/${{ github.repository }}/cicd-image:main
+    container: ghcr.io/vladimirkondr/p2p-tcp-chat/cicd-image:main
     strategy:
       fail-fast: false
       matrix:
