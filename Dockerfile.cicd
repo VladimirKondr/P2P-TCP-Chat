@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     clang-20 \
     clang-tidy-20 \
     clang-format-20 \
+    libclang-rt-20-dev \
     git \
     unzip \
     apt-transport-https \
