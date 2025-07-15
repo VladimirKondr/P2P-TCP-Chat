@@ -10,6 +10,11 @@ jobs:
       - uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
+      
+      - name: Prepare apt cache directory
+        run: |
+          sudo mkdir -p /var/cache/apt/archives
+          sudo chown -R $(whoami):$(whoami) /var/cache/apt
 
       - name: Cache apt packages
         uses: actions/cache@v4
@@ -21,6 +26,8 @@ jobs:
       - name: Install essentials and fix permissions
         run: |
           sudo ./.github/scripts/install-linters.sh
+      - name: Fix apt cache permissions for saving
+        run: sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
       - name: Check Code Formatting (clang-format)
         run: bazel build --config=clang-format //...
       - name: Run Static Analysis (clang-tidy)
@@ -37,6 +44,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+    
+      - name: Prepare apt cache directory
+        run: |
+          sudo mkdir -p /var/cache/apt/archives
+          sudo chown -R $(whoami):$(whoami) /var/cache/apt
 
       - name: Cache apt compiler
         uses: actions/cache@v4
@@ -49,7 +61,9 @@ jobs:
       - name: Install compiler and fix permissions
         run: |
           sudo ./.github/scripts/install-compiler.sh
-          
+        
+      - name: Fix apt cache permissions for saving
+        run: sudo chown -R $(whoami):$(whoami) /var/cache/apt/archives
       - name: Install Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
