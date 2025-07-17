@@ -1,6 +1,0 @@
-FROM ghcr.io/vladimirkondr/p2p-tcp-chat/base-image:main AS production_build
-WORKDIR /home/runner/app
-
-COPY . .
-RUN bazel fetch //src:app
-RUN bazel build //src:app
