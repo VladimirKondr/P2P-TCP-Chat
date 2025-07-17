@@ -88,17 +88,6 @@ jobs:
           labels: ${{ steps.meta_ci.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
-      - name: Build Docker app image (test)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile.app
-          push: false
-          tags: ${{ steps.meta_ci.outputs.tags }}
-          labels: ${{ steps.meta_ci.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   backend-lint:
     name: Backend Lint & Format
