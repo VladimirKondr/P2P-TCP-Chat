@@ -54,6 +54,7 @@ P2PTCPChat_configuration_20250710.txt
 *.exe
 *.out
 *.app
+!Dockerfile.app
 
 ### Dart ###
 # See https://www.dartlang.org/guides/libraries/private-files
