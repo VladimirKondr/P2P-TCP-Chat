@@ -1,2 +1,2 @@
-FROM base AS ci
-WORKDIR /home/runner/cicd
+FROM ghcr.io/vladimirkondr/p2p-tcp-chat/base-image:main AS ci
+WORKDIR /home/runner/ci
