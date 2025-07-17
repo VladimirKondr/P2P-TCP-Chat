@@ -16,7 +16,7 @@ jobs:
 
     outputs:
       image_name: ${{ steps.meta_ci.outputs.tags }}
-      build_triggered: ${{ steps.filter_base.outputs.dockerfile == 'true' || steps.filter_ci.outputs.dockerfile == 'true'}}
+      build_triggered: ${{ steps.filter_base.outputs.dockerfile == 'true' || steps.filter_ci.outputs.dockerfile == 'true' }}
 
     steps:
       - name: Check out code
@@ -57,13 +57,18 @@ jobs:
         with:
           images: ghcr.io/${{ steps.repo.outputs.name }}/base-image
           tags: type=raw,value=main,enable=true
-      
+          labels: |
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.sha }}
       - name: Extract Docker ci metadata
         id: meta_ci
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ steps.repo.outputs.name }}/ci-image
           tags: type=raw,value=main,enable=true
+          labels: |
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build and push Docker base image
         if: steps.filter_base.outputs.dockerfile == 'true'
