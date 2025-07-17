@@ -1,0 +1,6 @@
+FROM base AS production_build
+WORKDIR /home/runner/app
+
+COPY . .
+RUN bazel fetch //src:app
+RUN bazel build //src:app

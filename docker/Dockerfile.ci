@@ -1,0 +1,2 @@
+FROM base AS ci
+WORKDIR /home/runner/cicd
