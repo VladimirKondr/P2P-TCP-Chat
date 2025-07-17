@@ -7,7 +7,7 @@ RUN bazel build //src:app
 
 
 FROM ubuntu:22.04 AS app
-COPY --from=production_build /app/bazel-bin/src/app /app/app
+COPY --from=production_build /home/runner/app/bazel-bin/src/app /app/app
 
 EXPOSE 5050
 
