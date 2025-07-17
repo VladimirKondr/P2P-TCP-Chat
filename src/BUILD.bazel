@@ -1,9 +1,19 @@
+common_copts = ["-std=c++20"]
+
 cc_binary(
     name = "main",
     srcs = ["main.cpp"],
     deps = [
         "@boost.asio",
     ],
-    copts = ["-std=c++20"]
+    copts = common_copts,
 )
 
+cc_binary(
+    name = "app",
+    srcs = ["main.cpp"],
+    deps = [
+        "@boost.asio",
+    ],
+    copts = common_copts,
+)
