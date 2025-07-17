@@ -90,7 +90,6 @@ jobs:
           cache-to: type=gha,mode=max
       
       - name: Build Docker app image (test)
-        if: (steps.filter_ci.outputs.dockerfile == 'true' || steps.filter_base.outputs.dockerfile == 'true')
         uses: docker/build-push-action@v5
         with:
           context: .
