@@ -1,18 +1,24 @@
+"""
+MODULE.bazel for the p2p-tcp-chat project.
+"""
+
 module(
     name = "p2p-tcp-chat",
     version = "0.1",
 )
 
+
 bazel_dep(name = "protobuf", version = "3.19.0")
 bazel_dep(name = "postgres", version = "16.2")
-bazel_dep(name = "boost.asio", version = "1.87.0.bcr.1")
+bazel_dep(name = "boost.asio", version = "1.87.0")
 bazel_dep(name = "boost.program_options", version = "1.87.0")
 bazel_dep(name = "boost.filesystem", version = "1.87.0")
 bazel_dep(name = "boost.algorithm", version = "1.87.0")
 bazel_dep(name = "boost.range", version = "1.87.0")
 bazel_dep(name = "boost.serialization", version = "1.87.0")
-bazel_dep(name = "boost.beast", version = "1.87.0.bcr.1")
+bazel_dep(name = "boost.beast", version = "1.87.0")
 bazel_dep(name = "boost.uuid", version = "1.87.0")
+bazel_dep(name = "boost.system", version = "1.87.0")
 bazel_dep(name = "rules_python", version = "0.35.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
@@ -64,3 +70,5 @@ git_override(
     commit = "1fd2a042798ede8d6f5498ea92287bc1204260fa",
     remote = "https://github.com/oliverlee/bazel_clang_format.git",
 )
+
+
