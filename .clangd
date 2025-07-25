@@ -13,7 +13,17 @@ Index:
 
 Diagnostics:
   ClangTidy:
-    Add: modernize*,performance*,readability*
+    Add: 
+      - modernize-use-nullptr
+      - modernize-use-override
+      - modernize-loop-convert
+      - modernize-deprecated-headers
+      - performance-for-range-copy
+      - performance-implicit-conversion-in-loop
+      - performance-unnecessary-value-param
+      - readability-identifier-naming
+      - readability-magic-numbers
+      - readability-else-after-return
     Remove: modernize-use-trailing-return-type
 
 InlayHints:
@@ -23,6 +33,4 @@ InlayHints:
 
 Hover:
   ShowAKA: Yes
-Ignore:
-  - .clangd-ignore
 
