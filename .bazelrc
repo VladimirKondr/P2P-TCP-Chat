@@ -1,6 +1,6 @@
 common --enable_bzlmod
-build --repo_env=CC=clang
-build --repo_env=CXX=clang++
+build --repo_env=CC=gcc
+build --repo_env=CXX=g++
 
 
 #build --disk_cache=~/.cache/shared_bazel_action_cache/
@@ -99,8 +99,8 @@ build:msan --copt -fsanitize-memory-track-origins=2
 build:msan --copt -DADDRESS_SANITIZER
 build:msan --copt -fno-omit-frame-pointer
 build:msan --linkopt -fsanitize=memory
-build:msan --action_env=clang-18
-build:msan --action_env=clang++-18
+build:msan --action_env=gcc
+build:msan --action_env=g++
 build:msan --action_env=CXXFLAGS=-stdlib=libc++
 build:msan --action_env=BAZEL_CXXOPTS=-stdlib=libc++
 build:msan --action_env=BAZEL_LINKLIBS=-lc++:-lc++abi:-lm
