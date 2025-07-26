@@ -7,6 +7,11 @@ RUN bazel build //src:app
 
 
 FROM ubuntu:22.04 AS app
+RUN apt-get update && \
+    apt-get install -y libpqxx-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+
 COPY --from=production_build /home/runner/app/bazel-bin/src/app /app/app
 
 EXPOSE 5050
