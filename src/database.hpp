@@ -79,13 +79,15 @@ class Database {
     static constexpr uint64_t kDefaultNumConnections = 10;
 
     // TODO(vladimirkondratyonok): [PTC-68]: fix using config class
-    // NOLINT(concurrency-mt-unsafe)
+    // NOLINTBEGIN(concurrency-mt-unsafe)
     explicit Database(uint64_t num_connections = kDefaultNumConnections)
         : conn_pool_(ConnectionPool(num_connections, std::getenv("DB_CONN_STRING"))) {
     }
 
-    // TODO(vladimirkondratyonok): [PTC-67]: database shouldn't return pqxx::result. It should return json object with
-    // data.
+    // NOLINTEND(concurrency-mt-unsafe)
+
+    // TODO(vladimirkondratyonok): [PTC-67]: database shouldn't return pqxx::result. It should
+    // return json object with data.
     pqxx::result ExecuteQuery(const std::string& query) {
         auto conn = conn_pool_.Acquire();
         pqxx::work transaction(*conn);

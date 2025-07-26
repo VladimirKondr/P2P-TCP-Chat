@@ -10,8 +10,8 @@
 
 using BoostTcp = boost::asio::ip::tcp;
 
-#include "session.hpp"
 #include "database.hpp"
+#include "session.hpp"
 
 class Server {
    public:

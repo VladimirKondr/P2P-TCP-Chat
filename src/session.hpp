@@ -1,9 +1,11 @@
 #pragma once
 
+#include "database.hpp"
+
 #include <boost/asio.hpp>
+#include <boost/asio/buffer.hpp>
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
-#include <boost/asio/buffer.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/system/error_code.hpp>
 
@@ -11,14 +13,14 @@
 #include <istream>
 #include <memory>
 #include <string>
-#include "database.hpp"
 
 using BoostTcp = boost::asio::ip::tcp;
 
 class Session : public std::enable_shared_from_this<Session> {
    public:
     Session(BoostTcp::socket socket, Database* db)
-        : socket_(std::move(socket)), db_(db) {  // NOLINT(hicpp-move-const-arg, performance-move-const-arg)
+        : socket_(std::move(socket))
+        , db_(db) {  // NOLINT(hicpp-move-const-arg, performance-move-const-arg)
     }
 
     void Start() {
@@ -28,7 +30,6 @@ class Session : public std::enable_shared_from_this<Session> {
    private:
     void DoRead() {
         auto self = shared_from_this();
-
 
         boost::asio::async_read_until(
             socket_, buffer_, "\r\n\r\n",
@@ -59,7 +60,9 @@ class Session : public std::enable_shared_from_this<Session> {
         std::string response =
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/html\r\n"
-            "Content-Length: " + std::to_string(body.length()) + "\r\n"
+            "Content-Length: " +
+            std::to_string(body.length()) +
+            "\r\n"
             "Connection: close\r\n\r\n" +
             body;
         boost::asio::async_write(
