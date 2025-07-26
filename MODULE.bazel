@@ -70,5 +70,3 @@ git_override(
     commit = "1fd2a042798ede8d6f5498ea92287bc1204260fa",
     remote = "https://github.com/oliverlee/bazel_clang_format.git",
 )
-
-

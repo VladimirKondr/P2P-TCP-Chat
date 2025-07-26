@@ -11,13 +11,14 @@
 #include <istream>
 #include <memory>
 #include <string>
+#include "database.hpp"
 
 using BoostTcp = boost::asio::ip::tcp;
 
 class Session : public std::enable_shared_from_this<Session> {
    public:
-    explicit Session(BoostTcp::socket socket)
-        : socket_(std::move(socket)) {  // NOLINT(hicpp-move-const-arg, performance-move-const-arg)
+    Session(BoostTcp::socket socket, Database* db)
+        : socket_(std::move(socket)), db_(db) {  // NOLINT(hicpp-move-const-arg, performance-move-const-arg)
     }
 
     void Start() {
@@ -48,12 +49,19 @@ class Session : public std::enable_shared_from_this<Session> {
 
     void DoWrite() {
         auto self = shared_from_this();
+        auto result = db_->ExecuteQuery("SELECT COUNT(*) FROM visits");
+        int visit_count = 0;
+        if (!result.empty()) {
+            visit_count = result[0][0].as<int>();
+        }
+
+        std::string body = "Hello, world! Visits: " + std::to_string(visit_count);
         std::string response =
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/html\r\n"
-            "Content-Length: 13\r\n"
-            "Connection: close\r\n\r\n"
-            "Hello, world!";
+            "Content-Length: " + std::to_string(body.length()) + "\r\n"
+            "Connection: close\r\n\r\n" +
+            body;
         boost::asio::async_write(
             socket_, boost::asio::buffer(response),
             [self](boost::system::error_code ec, std::size_t /*length*/) {
@@ -65,4 +73,5 @@ class Session : public std::enable_shared_from_this<Session> {
 
     BoostTcp::socket socket_;
     boost::asio::streambuf buffer_{};
+    Database* db_;
 };

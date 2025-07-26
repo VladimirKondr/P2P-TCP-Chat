@@ -4,6 +4,8 @@ common_copts = [
     "-std=c++20",
     "-fexceptions",
     "-frtti",
+    "-g",
+    "-O0",
 ]
 
 
@@ -19,10 +21,13 @@ cc_binary(
 
 cc_binary(
     name = "app",
-    srcs = ["app.cpp", "session.hpp", "server.hpp"],
+    srcs = ["app.cpp", "session.hpp", "server.hpp", "database.hpp"],
     copts = common_copts+["-Wall", "-Wextra"],
     deps = [
         "@boost.asio",
-        "@boost.system",
+        "@boost.system"
+    ],
+    linkopts = [
+        "-lpqxx",
     ],
 )

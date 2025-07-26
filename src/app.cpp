@@ -12,9 +12,9 @@ int main() {
     try {
         boost::asio::io_context io_context;
 
-        Server s(io_context, 8080);
+        Server s(io_context, 8000);
 
-        std::cout << "Server started on port 8080" << "...\n";
+        std::cout << "Server started on port 8000" << "...\n";
         io_context.run();
 
     } catch (const std::exception& e) {
