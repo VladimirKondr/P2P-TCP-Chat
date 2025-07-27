@@ -115,15 +115,23 @@ jobs:
           echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
           mkdir -p "${BAZEL_DISK_CACHE_DIR}"
           mkdir -p "${BAZEL_REPO_CACHE_DIR}"
+          # Ensure proper permissions and ownership
           chown -R 1001:1001 /home/runner/.cache || true
+          chmod -R 755 /home/runner/.cache || true
+          # Verify directories exist and are accessible
           echo "Cache directories created:"
           ls -la /home/runner/.cache/
+          echo "Checking disk cache dir:"
+          ls -la "${BAZEL_DISK_CACHE_DIR}" || echo "Disk cache dir not accessible"
+          echo "Checking repo cache dir:"
+          ls -la "${BAZEL_REPO_CACHE_DIR}" || echo "Repo cache dir not accessible"
       - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ env.BAZEL_DISK_CACHE_DIR }}
           repository-cache: ${{ env.BAZEL_REPO_CACHE_DIR }}
+        continue-on-error: true
       
       - name: Check Code Formatting (clang-format)
         run: bazel test --config=ci --config=clang-format --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
@@ -155,15 +163,23 @@ jobs:
           echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
           mkdir -p "${BAZEL_DISK_CACHE_DIR}"
           mkdir -p "${BAZEL_REPO_CACHE_DIR}"
+          # Ensure proper permissions and ownership
           chown -R 1001:1001 /home/runner/.cache || true
+          chmod -R 755 /home/runner/.cache || true
+          # Verify directories exist and are accessible
           echo "Cache directories created:"
           ls -la /home/runner/.cache/
+          echo "Checking disk cache dir:"
+          ls -la "${BAZEL_DISK_CACHE_DIR}" || echo "Disk cache dir not accessible"
+          echo "Checking repo cache dir:"
+          ls -la "${BAZEL_REPO_CACHE_DIR}" || echo "Repo cache dir not accessible"
       - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ env.BAZEL_DISK_CACHE_DIR }}
           repository-cache: ${{ env.BAZEL_REPO_CACHE_DIR }}
+        continue-on-error: true
       
       - name: Verify Bazel Version (from container)
         run: bazel --version
