@@ -15,9 +15,9 @@ using BoostTcp = boost::asio::ip::tcp;
 
 class Server {
    public:
-    Server(boost::asio::io_context& io_context, int16_t port)
-        : db_(Database(10)), acceptor_(io_context, BoostTcp::endpoint(BoostTcp::v4(), port)) {
-        db_.Initialize();
+    Server(boost::asio::io_context& io_context, int16_t port, std::shared_ptr<IDatabaseService> db_service, std::shared_ptr<ISessionFactory> session_factory)
+        : db_(db_service), sf_(session_factory), acceptor_(io_context, BoostTcp::endpoint(BoostTcp::v4(), port)) {
+        db_->Initialize();
         DoAccept();
     }
 
@@ -25,14 +25,16 @@ class Server {
     void DoAccept() {
         acceptor_.async_accept([this](boost::system::error_code ec, BoostTcp::socket socket) {
             if (!ec) {
-                db_.ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
-                std::make_shared<Session>(std::move(socket), &db_)->Start();
+                db_->ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
+                auto session = sf_->Create(std::move(socket), db_);
+                session->Start();
             }
 
             DoAccept();
         });
     }
 
-    Database db_;
+    std::shared_ptr<IDatabaseService> db_;
+    std::shared_ptr<ISessionFactory> sf_;
     BoostTcp::acceptor acceptor_;
 };

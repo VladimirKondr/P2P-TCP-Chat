@@ -17,14 +17,40 @@
 
 using BoostTcp = boost::asio::ip::tcp;
 
-class Session : public std::enable_shared_from_this<Session> {
+class ISession : public std::enable_shared_from_this<ISession> {
    public:
-    Session(BoostTcp::socket socket, Database* db)
+    virtual ~ISession() = default;
+    ISession(const ISession&) = delete;
+    ISession& operator=(const ISession&) = delete;
+    ISession(ISession&&) = delete;
+    ISession& operator=(ISession&&) = delete;
+    virtual void Start() = 0;
+
+   protected:
+    ISession() = default;
+};
+
+class ISessionFactory {
+   public:
+    virtual ~ISessionFactory() = default;
+    ISessionFactory() = default;
+    ISessionFactory(const ISessionFactory&) = delete;
+    ISessionFactory& operator=(const ISessionFactory&) = delete;
+    ISessionFactory(ISessionFactory&&) = delete;
+    ISessionFactory& operator=(ISessionFactory&&) = delete;
+
+    virtual std::shared_ptr<ISession> Create(
+        BoostTcp::socket socket, std::shared_ptr<IDatabaseService> db) = 0;
+};
+
+class Session : public ISession {
+   public:
+    Session(BoostTcp::socket socket, std::shared_ptr<IDatabaseService> db)
         : socket_(std::move(socket))
-        , db_(db) {  // NOLINT(hicpp-move-const-arg, performance-move-const-arg)
+        , db_(std::move(db)) {  // NOLINT(hicpp-move-const-arg, performance-move-const-arg)
     }
 
-    void Start() {
+    void Start() override {
         DoRead();
     }
 
@@ -77,5 +103,13 @@ class Session : public std::enable_shared_from_this<Session> {
 
     BoostTcp::socket socket_;
     boost::asio::streambuf buffer_;
-    Database* db_;
+    std::shared_ptr<IDatabaseService> db_;
+};
+
+class SessionFactory : public ISessionFactory {
+   public:
+    std::shared_ptr<ISession> Create(
+        BoostTcp::socket socket, std::shared_ptr<IDatabaseService> db_service) override {
+        return std::make_shared<Session>(std::move(socket), db_service);
+    }
 };

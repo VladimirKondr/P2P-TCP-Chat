@@ -7,9 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <pqxx/connection.hxx>
-#include <pqxx/result.hxx>
-#include <pqxx/transaction.hxx>
+#include <pqxx/pqxx>
 #include <queue>
 #include <stdexcept>
 #include <string>
@@ -86,13 +84,28 @@ inline Connection::~Connection() noexcept {
     }
 }
 
-class Database {
+class IDatabaseService {
+   public:
+    virtual ~IDatabaseService() = default;
+
+    IDatabaseService() = default;
+    IDatabaseService(const IDatabaseService&) = delete;
+    IDatabaseService& operator=(const IDatabaseService&) = delete;
+    IDatabaseService(IDatabaseService&&) = delete;
+    IDatabaseService& operator=(IDatabaseService&&) = delete;
+
+    virtual void Initialize() = 0;
+
+    virtual pqxx::result ExecuteQuery(const std::string& query) = 0;
+};
+
+class PostgresDatabase : public IDatabaseService {
    public:
     static constexpr uint64_t kDefaultNumConnections = 10;
 
     // TODO(vladimirkondratyonok): [PTC-68]: fix using config class
     // NOLINTBEGIN(concurrency-mt-unsafe)
-    explicit Database(uint64_t num_connections = kDefaultNumConnections)
+    explicit PostgresDatabase(uint64_t num_connections = kDefaultNumConnections)
         : conn_pool_(num_connections, [] {
             const char* conn_str = std::getenv("DB_CONN_STRING");
             if (conn_str == nullptr || *conn_str == '\0') {
@@ -106,7 +119,7 @@ class Database {
 
     // TODO(vladimirkondratyonok): [PTC-67]: database shouldn't return pqxx::result. It should
     // return json object with data.
-    pqxx::result ExecuteQuery(const std::string& query) {
+    pqxx::result ExecuteQuery(const std::string& query) override {
         auto conn = conn_pool_.Acquire();
         pqxx::work transaction(*conn);
         const pqxx::result res = transaction.exec(query);
@@ -122,7 +135,7 @@ class Database {
     //     transaction.commit();
     // }
 
-    void Initialize() {
+    void Initialize() override {
         ExecuteQuery(R"(CREATE TABLE IF NOT EXISTS visits (
                                id SERIAL PRIMARY KEY,
                                time TIMESTAMP WITH TIME ZONE
