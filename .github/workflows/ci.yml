@@ -40,6 +40,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:master
       - name: Log in to GitHub Container Registry
         if: (steps.filter_ci.outputs.dockerfile == 'true' || steps.filter_base.outputs.dockerfile == 'true')
         uses: docker/login-action@v3
@@ -108,6 +110,31 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+      
+      # Кэширование Bazel используя GitHub Actions cache
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/.cache/bazel-disk-cache
+            /home/runner/.cache/bazel-repo-cache
+            ~/.cache/bazelisk
+          key: ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-lint-
+            ${{ runner.os }}-bazel-
+      
+      # Дополнительное кэширование для зависимостей
+      - name: Cache Bazel External Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel/_bazel_*/external
+            ~/.cache/bazel/_bazel_*/execroot
+          key: ${{ runner.os }}-bazel-external-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-external-
+      
       - name: Create cache directories
         run: |
           echo "Creating cache directories for backend-lint..."
@@ -115,23 +142,12 @@ jobs:
           echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
           mkdir -p "${BAZEL_DISK_CACHE_DIR}"
           mkdir -p "${BAZEL_REPO_CACHE_DIR}"
+          mkdir -p ~/.cache/bazelisk
           # Ensure proper permissions and ownership
           chown -R 1001:1001 /home/runner/.cache || true
+          chown -R 1001:1001 ~/.cache || true
           chmod -R 755 /home/runner/.cache || true
-          # Verify directories exist and are accessible
-          echo "Cache directories created:"
-          ls -la /home/runner/.cache/
-          echo "Checking disk cache dir:"
-          ls -la "${BAZEL_DISK_CACHE_DIR}" || echo "Disk cache dir not accessible"
-          echo "Checking repo cache dir:"
-          ls -la "${BAZEL_REPO_CACHE_DIR}" || echo "Repo cache dir not accessible"
-      - name: Setup Bazel Caches
-        uses: bazel-contrib/setup-bazel@0.15.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ env.BAZEL_DISK_CACHE_DIR }}
-          repository-cache: ${{ env.BAZEL_REPO_CACHE_DIR }}
-        continue-on-error: true
+          chmod -R 755 ~/.cache || true
       
       - name: Check Code Formatting (clang-format)
         run: bazel test --config=ci --config=clang-format --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
@@ -156,6 +172,32 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+      
+      # Кэширование Bazel используя GitHub Actions cache
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/.cache/bazel-disk-cache
+            /home/runner/.cache/bazel-repo-cache
+            ~/.cache/bazelisk
+          key: ${{ runner.os }}-bazel-${{ matrix.config }}-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-${{ matrix.config }}-
+            ${{ runner.os }}-bazel-
+      
+      # Дополнительное кэширование для зависимостей  
+      - name: Cache Bazel External Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel/_bazel_*/external
+            ~/.cache/bazel/_bazel_*/execroot
+          key: ${{ runner.os }}-bazel-external-${{ matrix.config }}-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-external-${{ matrix.config }}-
+            ${{ runner.os }}-bazel-external-
+      
       - name: Create cache directories
         run: |
           echo "Creating cache directories for backend-build-and-test..."
@@ -163,27 +205,13 @@ jobs:
           echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
           mkdir -p "${BAZEL_DISK_CACHE_DIR}"
           mkdir -p "${BAZEL_REPO_CACHE_DIR}"
+          mkdir -p ~/.cache/bazelisk
           # Ensure proper permissions and ownership
           chown -R 1001:1001 /home/runner/.cache || true
+          chown -R 1001:1001 ~/.cache || true
           chmod -R 755 /home/runner/.cache || true
-          # Verify directories exist and are accessible
-          echo "Cache directories created:"
-          ls -la /home/runner/.cache/
-          echo "Checking disk cache dir:"
-          ls -la "${BAZEL_DISK_CACHE_DIR}" || echo "Disk cache dir not accessible"
-          echo "Checking repo cache dir:"
-          ls -la "${BAZEL_REPO_CACHE_DIR}" || echo "Repo cache dir not accessible"
-      - name: Setup Bazel Caches
-        uses: bazel-contrib/setup-bazel@0.15.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ env.BAZEL_DISK_CACHE_DIR }}
-          repository-cache: ${{ env.BAZEL_REPO_CACHE_DIR }}
-        continue-on-error: true
+          chmod -R 755 ~/.cache || true
       
-      - name: Verify Bazel Version (from container)
-        run: bazel --version
-        
       - name: Build and Run Tests (${{ matrix.config }})
         run: bazel test --config=ci --config=${{ matrix.config }} --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
 
