@@ -102,26 +102,34 @@ jobs:
     container:
       image: ${{ needs.build-docker.outputs.image_name }}
       options: --user 1001 -v /tmp/runner-home:/home/runner
+    env:
+      BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
+      BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
     steps:
       - name: Check out code
         uses: actions/checkout@v4
       - name: Create cache directories
         run: |
-          mkdir -p /home/runner/.cache/bazel-disk-cache
-          mkdir -p /home/runner/.cache/bazel-repo-cache
+          echo "Creating cache directories for backend-lint..."
+          echo "BAZEL_DISK_CACHE_DIR: ${BAZEL_DISK_CACHE_DIR}"
+          echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
+          mkdir -p "${BAZEL_DISK_CACHE_DIR}"
+          mkdir -p "${BAZEL_REPO_CACHE_DIR}"
           chown -R 1001:1001 /home/runner/.cache || true
+          echo "Cache directories created:"
+          ls -la /home/runner/.cache/
       - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
-          disk-cache: /home/runner/.cache/bazel-disk-cache
-          repository-cache: /home/runner/.cache/bazel-repo-cache
+          disk-cache: ${{ env.BAZEL_DISK_CACHE_DIR }}
+          repository-cache: ${{ env.BAZEL_REPO_CACHE_DIR }}
       
       - name: Check Code Formatting (clang-format)
-        run: bazel test --config=clang-format //...
+        run: bazel test --config=ci --config=clang-format --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
 
       - name: Run Static Analysis (clang-tidy)
-        run: bazel test --config=clang-tidy //...
+        run: bazel test --config=ci --config=clang-tidy --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
 
   backend-build-and-test:
     name: Backend Build & Test (${{ matrix.config }})
@@ -130,6 +138,9 @@ jobs:
     container:
       image: ${{ needs.build-docker.outputs.image_name }}
       options: --user 1001 -v /tmp/runner-home:/home/runner
+    env:
+      BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
+      BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
     strategy:
       fail-fast: false
       matrix:
@@ -139,21 +150,26 @@ jobs:
         uses: actions/checkout@v4
       - name: Create cache directories
         run: |
-          mkdir -p /home/runner/.cache/bazel-disk-cache
-          mkdir -p /home/runner/.cache/bazel-repo-cache
+          echo "Creating cache directories for backend-build-and-test..."
+          echo "BAZEL_DISK_CACHE_DIR: ${BAZEL_DISK_CACHE_DIR}"
+          echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
+          mkdir -p "${BAZEL_DISK_CACHE_DIR}"
+          mkdir -p "${BAZEL_REPO_CACHE_DIR}"
           chown -R 1001:1001 /home/runner/.cache || true
+          echo "Cache directories created:"
+          ls -la /home/runner/.cache/
       - name: Setup Bazel Caches
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
-          disk-cache: /home/runner/.cache/bazel-disk-cache
-          repository-cache: /home/runner/.cache/bazel-repo-cache
+          disk-cache: ${{ env.BAZEL_DISK_CACHE_DIR }}
+          repository-cache: ${{ env.BAZEL_REPO_CACHE_DIR }}
       
       - name: Verify Bazel Version (from container)
         run: bazel --version
         
       - name: Build and Run Tests (${{ matrix.config }})
-        run: bazel test --config=ci --config=${{ matrix.config }} //...
+        run: bazel test --config=ci --config=${{ matrix.config }} --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
 
   build-and-test-frontend:
     name: Frontend Build & Test

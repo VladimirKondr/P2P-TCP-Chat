@@ -216,6 +216,11 @@ build:ci --verbose_failures
 build:ci --test_output=errors
 test:ci --test_env=CI
 
+# CI-specific cache configuration
+# These will be overridden by command line arguments in GitHub Actions
+common:ci --disk_cache=/home/runner/.cache/bazel-disk-cache
+common:ci --repository_cache=/home/runner/.cache/bazel-repo-cache
+
 # Setup compiler flags - required for Qt6 is at least C++17
 build:gcc9 --cxxopt=-std=c++2a
 build:gcc9 --cxxopt=-Wall
