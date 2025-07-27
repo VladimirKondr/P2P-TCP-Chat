@@ -7,9 +7,9 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <pqxx/connection>
-#include <pqxx/result>
-#include <pqxx/transaction>
+#include <pqxx/connection.hxx>
+#include <pqxx/result.hxx>
+#include <pqxx/transaction.hxx>
 #include <queue>
 #include <stdexcept>
 #include <string>
