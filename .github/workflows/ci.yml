@@ -6,6 +6,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  # Глобальные настройки для производительности
+  BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g --host_jvm_args=-Xms1g"
+
 jobs:
   build-docker:
     name: Build CI Docker Image
@@ -107,6 +111,9 @@ jobs:
     env:
       BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
       BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
+      # Оптимизация производительности Bazel
+      BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g"
+      USE_BAZEL_VERSION: "7.0.0"
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -119,21 +126,23 @@ jobs:
             /home/runner/.cache/bazel-disk-cache
             /home/runner/.cache/bazel-repo-cache
             ~/.cache/bazelisk
-          key: ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl', 'src/**', 'tests/**') }}
           restore-keys: |
+            ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
             ${{ runner.os }}-bazel-lint-
             ${{ runner.os }}-bazel-
       
-      # Дополнительное кэширование для зависимостей
-      - name: Cache Bazel External Dependencies
+      # Кэширование Bazel workspace-specific директорий
+      - name: Cache Bazel Workspace
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/bazel/_bazel_*/external
-            ~/.cache/bazel/_bazel_*/execroot
-          key: ${{ runner.os }}-bazel-external-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+            ~/.cache/bazel/_bazel_*/install
+            ~/.cache/bazel/_bazel_*/execroot/*/external
+          key: ${{ runner.os }}-bazel-workspace-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bazel-external-
+            ${{ runner.os }}-bazel-workspace-
       
       - name: Create cache directories
         run: |
@@ -143,6 +152,7 @@ jobs:
           mkdir -p "${BAZEL_DISK_CACHE_DIR}"
           mkdir -p "${BAZEL_REPO_CACHE_DIR}"
           mkdir -p ~/.cache/bazelisk
+          mkdir -p ~/.cache/bazel
           # Ensure proper permissions and ownership
           chown -R 1001:1001 /home/runner/.cache || true
           chown -R 1001:1001 ~/.cache || true
@@ -150,10 +160,10 @@ jobs:
           chmod -R 755 ~/.cache || true
       
       - name: Check Code Formatting (clang-format)
-        run: bazel test --config=ci --config=clang-format --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
+        run: bazel test --config=ci --config=clang-format //...
 
       - name: Run Static Analysis (clang-tidy)
-        run: bazel test --config=ci --config=clang-tidy --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
+        run: bazel test --config=ci --config=clang-tidy //...
 
   backend-build-and-test:
     name: Backend Build & Test (${{ matrix.config }})
@@ -165,6 +175,9 @@ jobs:
     env:
       BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
       BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
+      # Оптимизация производительности Bazel
+      BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g"
+      USE_BAZEL_VERSION: "7.0.0"
     strategy:
       fail-fast: false
       matrix:
@@ -181,22 +194,24 @@ jobs:
             /home/runner/.cache/bazel-disk-cache
             /home/runner/.cache/bazel-repo-cache
             ~/.cache/bazelisk
-          key: ${{ runner.os }}-bazel-${{ matrix.config }}-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ matrix.config }}-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl', 'src/**', 'tests/**') }}
           restore-keys: |
+            ${{ runner.os }}-bazel-${{ matrix.config }}-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
             ${{ runner.os }}-bazel-${{ matrix.config }}-
             ${{ runner.os }}-bazel-
       
-      # Дополнительное кэширование для зависимостей  
-      - name: Cache Bazel External Dependencies
+      # Кэширование Bazel workspace-specific директорий
+      - name: Cache Bazel Workspace
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/bazel/_bazel_*/external
-            ~/.cache/bazel/_bazel_*/execroot
-          key: ${{ runner.os }}-bazel-external-${{ matrix.config }}-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
+            ~/.cache/bazel/_bazel_*/install
+            ~/.cache/bazel/_bazel_*/execroot/*/external
+          key: ${{ runner.os }}-bazel-workspace-${{ matrix.config }}-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bazel-external-${{ matrix.config }}-
-            ${{ runner.os }}-bazel-external-
+            ${{ runner.os }}-bazel-workspace-${{ matrix.config }}-
+            ${{ runner.os }}-bazel-workspace-
       
       - name: Create cache directories
         run: |
@@ -206,6 +221,7 @@ jobs:
           mkdir -p "${BAZEL_DISK_CACHE_DIR}"
           mkdir -p "${BAZEL_REPO_CACHE_DIR}"
           mkdir -p ~/.cache/bazelisk
+          mkdir -p ~/.cache/bazel
           # Ensure proper permissions and ownership
           chown -R 1001:1001 /home/runner/.cache || true
           chown -R 1001:1001 ~/.cache || true
@@ -213,7 +229,7 @@ jobs:
           chmod -R 755 ~/.cache || true
       
       - name: Build and Run Tests (${{ matrix.config }})
-        run: bazel test --config=ci --config=${{ matrix.config }} --disk_cache="${BAZEL_DISK_CACHE_DIR}" --repository_cache="${BAZEL_REPO_CACHE_DIR}" //...
+        run: bazel test --config=ci --config=${{ matrix.config }} //...
 
   build-and-test-frontend:
     name: Frontend Build & Test
