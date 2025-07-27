@@ -25,7 +25,7 @@ class Server {
     void DoAccept() {
         acceptor_.async_accept([this](boost::system::error_code ec, BoostTcp::socket socket) {
             if (!ec) {
-                db_->ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
+                db_->MarkVisit();
                 auto session = sf_->Create(std::move(socket), db_);
                 session->Start();
             }

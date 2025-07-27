@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/json/object.hpp>
+
 #include <condition_variable>
 #include <cstdint>
 #include <cstdlib>
@@ -96,7 +98,9 @@ class IDatabaseService {
 
     virtual void Initialize() = 0;
 
-    virtual pqxx::result ExecuteQuery(const std::string& query) = 0;
+    virtual void MarkVisit() = 0;
+
+    virtual uint64_t GetCount() = 0;
 };
 
 class PostgresDatabase : public IDatabaseService {
@@ -117,23 +121,14 @@ class PostgresDatabase : public IDatabaseService {
 
     // NOLINTEND(concurrency-mt-unsafe)
 
-    // TODO(vladimirkondratyonok): [PTC-67]: database shouldn't return pqxx::result. It should
-    // return json object with data.
-    pqxx::result ExecuteQuery(const std::string& query) override {
-        auto conn = conn_pool_.Acquire();
-        pqxx::work transaction(*conn);
-        const pqxx::result res = transaction.exec(query);
-        transaction.commit();
-        return res;
+    void MarkVisit() override {
+        auto res = ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
     }
 
-    // // Execute a query without expecting results (INSERT, UPDATE, DELETE)
-    // void ExecuteCommand(const std::string& command) {
-    //     auto conn = conn_pool_.Acquire();
-    //     pqxx::work transaction(*conn);
-    //     pqxx::result res = transaction.exec(command);
-    //     transaction.commit();
-    // }
+    uint64_t GetCount() override {
+        auto res = ExecuteQuery(R"(SELECT COUNT(*) FROM visits)");
+        return res[0][0].as<uint64_t>();
+    }
 
     void Initialize() override {
         ExecuteQuery(R"(CREATE TABLE IF NOT EXISTS visits (
@@ -143,5 +138,13 @@ class PostgresDatabase : public IDatabaseService {
     }
 
    private:
+    pqxx::result ExecuteQuery(const std::string& query) {
+        auto conn = conn_pool_.Acquire();
+        pqxx::work transaction(*conn);
+        const pqxx::result res = transaction.exec(query);
+        transaction.commit();
+        return res;
+    }
+
     ConnectionPool conn_pool_;
 };
