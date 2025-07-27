@@ -7,7 +7,6 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/system/error_code.hpp>
 
 #include <cstddef>
 #include <iostream>
