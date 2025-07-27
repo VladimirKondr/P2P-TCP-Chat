@@ -22,9 +22,14 @@ build --cxxopt='-std=c++2b'
 test --cxxopt='-std=c++2b'
 run --cxxopt='-std=c++2b'
 
-build --cxxopt="-O3"
-test --cxxopt="-O3"
-run --cxxopt="-O3"
+build:release --cxxopt="-O3"
+test:release --cxxopt="-O3"
+run:release --cxxopt="-O3"
+
+# Default to no optimization for regular builds
+build --cxxopt="-O1"
+test --cxxopt="-O1"
+run --cxxopt="-O1"
 
 build --cxxopt='-Wno-pragma-once-outside-header'
 test --cxxopt='-Wno-pragma-once-outside-header'
@@ -151,8 +156,8 @@ test:debug --test_timeout=9999
 # Docs: https://bazel.build/docs/user-manual#cache-test-results
 #test:debug --nocache_test_results
 
-build:debug --copt -O2
-test:debug --copt -O2
+build:debug --copt -O0
+test:debug --copt -O0
 
 build:debug --copt -g
 test:debug --copt -g
@@ -160,11 +165,19 @@ test:debug --copt -g
 build:debug -c dbg
 test:debug -c dbg
 
-build:debug --copt -DNDEBUG
-test:debug --copt -DNDEBUG
+# Remove NDEBUG for debug builds to enable assertions
+# build:debug --copt -DNDEBUG
+# test:debug --copt -DNDEBUG
 
 build:debug --strip=never
 test:debug --strip=never
+
+# Additional debug flags for better debugging experience
+build:debug --copt -ggdb3
+test:debug --copt -ggdb3
+
+build:debug --copt -fno-omit-frame-pointer
+test:debug --copt -fno-omit-frame-pointer
 
 build:debug --cxxopt='-Wno-error=unused-variable'
 test:debug --cxxopt='-Wno-error=unused-variable'

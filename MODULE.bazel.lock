@@ -104,6 +104,8 @@
     "https://bcr.bazel.build/modules/boost.io/1.87.0/source.json": "b42dd52763c9bce54ed4a4c8ef48d560460f854bb53770f37c839180dba897e0",
     "https://bcr.bazel.build/modules/boost.iterator/1.87.0/MODULE.bazel": "7e6ce23b059902c1709ba033dd1f4783b3de3f48ec4dc9f5e6ab82ddc699223e",
     "https://bcr.bazel.build/modules/boost.iterator/1.87.0/source.json": "69d37225c6ffc3e8af0e7ea427ff51ccb04d84c6e7e361bbb8f1dc859b4412ea",
+    "https://bcr.bazel.build/modules/boost.json/1.87.0/MODULE.bazel": "1eaeee7423a2de4603432e791dc000a3dcaa32cb89fc01239405b9cd485bc512",
+    "https://bcr.bazel.build/modules/boost.json/1.87.0/source.json": "9482534654873248f1471f9cd2170c5b87561bab091ad4b87b05ba056dd4a684",
     "https://bcr.bazel.build/modules/boost.lexical_cast/1.87.0/MODULE.bazel": "878478bbe6d3350cad171dd1b4558732dbee7021ab69e40a3c5bf9e59b37922c",
     "https://bcr.bazel.build/modules/boost.lexical_cast/1.87.0/source.json": "80e0443943851508f2fa427c1c48b714690691c7022082ec65551dbe4680c82e",
     "https://bcr.bazel.build/modules/boost.logic/1.87.0/MODULE.bazel": "a3087bd403c278bbfd7ef2cfb83ed72a812b60231285e823735db006a30de394",
