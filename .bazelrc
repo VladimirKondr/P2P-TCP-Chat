@@ -1,6 +1,6 @@
 common --enable_bzlmod
-common --disk_cache=%HOME%/.cache/bazel-disk-cache
-common --repository_cache=%HOME%/.cache/bazel-repo-cache
+common --disk_cache=~/.cache/bazel-disk-cache
+common --repository_cache=~/.cache/bazel-repo-cache
 build --repo_env=CC=gcc
 build --repo_env=CXX=g++
 
