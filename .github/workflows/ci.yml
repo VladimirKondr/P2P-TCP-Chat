@@ -111,6 +111,8 @@ jobs:
           bazelisk-cache: true
           disk-cache: true
           repository-cache: true
+          disk-cache-path: ${{ runner.home }}/.cache/bazel-disk-cache
+          repository-cache-path: ${{ runner.home }}/.cache/bazel-repo-cache
       
       - name: Check Code Formatting (clang-format)
         run: bazel test --config=clang-format //...
