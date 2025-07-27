@@ -1,5 +1,6 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 
+
 common_copts = [
     "-std=c++20",
     "-fexceptions",
@@ -22,12 +23,41 @@ cc_binary(
 cc_binary(
     name = "app",
     srcs = ["app.cpp", "session.hpp", "server.hpp", "database.hpp"],
-    copts = common_copts+["-Wall", "-Wextra"],
+    copts = common_copts + [
+        "-Wall",
+        "-Wextra",
+    ] + select({
+        "@platforms//os:macos": [
+            "-I/usr/local/include",
+        ],
+        "@platforms//os:linux": [
+            "-I/usr/include/postgresql",
+            "-I/usr/local/include",
+        ],
+        "//conditions:default": [
+            "-I/usr/local/include",
+        ],
+    }),
     deps = [
         "@boost.asio",
-        "@boost.system"
+        "@boost.system",
     ],
-    linkopts = [
-        "-lpqxx",
-    ],
+    linkopts = select({
+        "@platforms//os:macos": [
+            "-L/usr/local/lib",
+            "-lpqxx",
+            "-lpq",
+        ],
+        "@platforms//os:linux": [
+            "-L/usr/lib/x86_64-linux-gnu",
+            "-L/usr/local/lib",
+            "-lpqxx",
+            "-lpq",
+        ],
+        "//conditions:default": [
+            "-L/usr/local/lib",
+            "-lpqxx",
+            "-lpq",
+        ],
+    }),
 )
