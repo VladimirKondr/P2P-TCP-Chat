@@ -1,4 +1,4 @@
-FROM ghcr.io/vladimirkondr/p2p-tcp-chat/base-image:main AS production_build
+FROM ghcr.io/vladimirkondr/p2p-tcp-chat/base-image@sha256:4d191d0ccb385ab64f7196bd275a232c34443b43f5b2194c78c2d0b43125ee60 AS production_build
 WORKDIR /home/runner/app
 
 COPY . .
