@@ -7,7 +7,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Глобальные настройки для производительности
   BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g --host_jvm_args=-Xms1g"
 
 jobs:
@@ -111,14 +110,12 @@ jobs:
     env:
       BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
       BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
-      # Оптимизация производительности Bazel
       BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g"
       USE_BAZEL_VERSION: "7.0.0"
     steps:
       - name: Check out code
         uses: actions/checkout@v4
       
-      # Кэширование Bazel используя GitHub Actions cache
       - name: Cache Bazel
         uses: actions/cache@v4
         with:
@@ -133,7 +130,6 @@ jobs:
             ${{ runner.os }}-bazel-lint-
             ${{ runner.os }}-bazel-
       
-      # Кэширование Bazel workspace-specific директорий
       - name: Cache Bazel Workspace
         uses: actions/cache@v4
         with:
@@ -175,7 +171,6 @@ jobs:
     env:
       BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
       BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
-      # Оптимизация производительности Bazel
       BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g"
       USE_BAZEL_VERSION: "7.0.0"
     strategy:
