@@ -2,10 +2,15 @@
 
 #include <condition_variable>
 #include <cstdint>
+#include <cstdlib>
+#include <exception>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <pqxx/pqxx>
 #include <queue>
+#include <string>
+#include <utility>
 
 class ConnectionPool;
 
@@ -15,7 +20,7 @@ class Connection {
         : conn_(std::move(conn)), pool_(pool) {
     }
 
-    ~Connection();
+    ~Connection() noexcept;
 
     Connection(const Connection&) = delete;
     Connection& operator=(const Connection&) = delete;
@@ -57,7 +62,7 @@ class ConnectionPool {
     friend class Connection;
 
     void Release(std::unique_ptr<pqxx::connection> conn) {
-        std::unique_lock<std::mutex> lock(mutex_);
+        const std::unique_lock<std::mutex> lock(mutex_);
         connections_.push(std::move(conn));
         cv_.notify_one();
     }
@@ -68,9 +73,13 @@ class ConnectionPool {
     std::condition_variable cv_;
 };
 
-inline Connection::~Connection() {
+inline Connection::~Connection() noexcept {
     if (conn_) {
-        pool_->Release(std::move(conn_));
+        try {
+            pool_->Release(std::move(conn_));
+        } catch (std::exception& e) {
+            std::cout << e.what() << "\n";
+        }
     }
 }
 

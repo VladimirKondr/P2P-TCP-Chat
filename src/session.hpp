@@ -56,7 +56,7 @@ class Session : public std::enable_shared_from_this<Session> {
             visit_count = result[0][0].as<int>();
         }
 
-        std::string body = "Hello, world! Visits: " + std::to_string(visit_count);
+        const std::string body = "Hello, world! Visits: " + std::to_string(visit_count);
         std::string response =
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/html\r\n"
@@ -75,6 +75,6 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     BoostTcp::socket socket_;
-    boost::asio::streambuf buffer_{};
+    boost::asio::streambuf buffer_;
     Database* db_;
 };

@@ -1,18 +1,15 @@
 #include "server.hpp"
 
-#include <boost/asio.hpp>
-#include <boost/asio/read_until.hpp>
-#include <boost/asio/streambuf.hpp>
-#include <boost/system/error_code.hpp>
+#include <boost/asio/io_context.hpp>
 
+#include <exception>
 #include <iostream>
-#include <memory>
 
 int main() {
     try {
         boost::asio::io_context io_context;
 
-        Server s(io_context, 8000);
+        const Server s(io_context, 8000);
 
         std::cout << "Server started on port 8000" << "...\n";
         io_context.run();
