@@ -4,6 +4,7 @@
 
 #include <exception>
 #include <iostream>
+#include <cstdlib>
 
 int main() {
     try {

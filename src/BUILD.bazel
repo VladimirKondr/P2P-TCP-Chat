@@ -46,18 +46,15 @@ cc_binary(
         "@platforms//os:macos": [
             "-L/usr/local/lib",
             "-lpqxx",
-            "-lpq",
         ],
         "@platforms//os:linux": [
             "-L/usr/lib/x86_64-linux-gnu",
             "-L/usr/local/lib",
             "-lpqxx",
-            "-lpq",
         ],
         "//conditions:default": [
             "-L/usr/local/lib",
             "-lpqxx",
-            "-lpq",
         ],
     }),
 )

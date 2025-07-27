@@ -7,8 +7,11 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <pqxx/pqxx>
+#include <pqxx/connection>
+#include <pqxx/result>
+#include <pqxx/transaction>
 #include <queue>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -90,7 +93,13 @@ class Database {
     // TODO(vladimirkondratyonok): [PTC-68]: fix using config class
     // NOLINTBEGIN(concurrency-mt-unsafe)
     explicit Database(uint64_t num_connections = kDefaultNumConnections)
-        : conn_pool_(ConnectionPool(num_connections, std::getenv("DB_CONN_STRING"))) {
+        : conn_pool_(num_connections, [] {
+            const char* conn_str = std::getenv("DB_CONN_STRING");
+            if (conn_str == nullptr || *conn_str == '\0') {
+                throw std::runtime_error("The environment variable DB_CONN_STRING must be set.");
+            }
+            return std::string(conn_str);
+        }()) {
     }
 
     // NOLINTEND(concurrency-mt-unsafe)
@@ -100,7 +109,7 @@ class Database {
     pqxx::result ExecuteQuery(const std::string& query) {
         auto conn = conn_pool_.Acquire();
         pqxx::work transaction(*conn);
-        pqxx::result res = transaction.exec(query);
+        const pqxx::result res = transaction.exec(query);
         transaction.commit();
         return res;
     }
