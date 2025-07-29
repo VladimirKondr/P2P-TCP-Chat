@@ -17,7 +17,7 @@ int main() {
 
         auto session_factory = std::make_shared<SessionFactory>();
 
-        Server s(io_context, db_service, session_factory);
+        const Server s(io_context, db_service, session_factory);
 
         std::cout << "Server started on port " << GetConfig().GetCentralServerPort() << "...\n";
         io_context.run();

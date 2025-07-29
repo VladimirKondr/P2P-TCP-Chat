@@ -77,7 +77,7 @@ class Session : public ISession {
 
     void DoWrite() {
         auto self = shared_from_this();
-        uint64_t visit_count = db_->GetCount();
+        const uint64_t visit_count = db_->GetCount();
 
         const std::string body = "Hello, world! Visits: " + std::to_string(visit_count);
         std::string response =

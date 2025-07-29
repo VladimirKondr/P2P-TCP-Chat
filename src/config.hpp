@@ -87,7 +87,7 @@ class ConfigManager {
         auto map_final = ResolveNested(map_env, map_file);
 
         for (const auto& [name, value] : map_final) {
-            boost::any any_value = ConvertValueUsingDescriptor(name, value);
+            const boost::any any_value = ConvertValueUsingDescriptor(name, value);
             vm_.insert(
                 std::make_pair(name, boost::program_options::variable_value(any_value, false)));
         }
@@ -102,7 +102,7 @@ class ConfigManager {
         return value;
     }
 
-    boost::any ConvertValueForOption(
+    static boost::any ConvertValueForOption(
         const boost::shared_ptr<boost::program_options::option_description>& option,
         const std::string& name, const std::string& value) {
         auto semantic = option->semantic();
@@ -112,10 +112,10 @@ class ConfigManager {
         return TryParseAsInt(name, value);
     }
 
-    boost::any TryParseWithSemantic(
+    static boost::any TryParseWithSemantic(
         const boost::program_options::value_semantic* semantic, const std::string& name,
         const std::string& value) {
-        std::vector<std::string> args = {value};
+        const std::vector<std::string> args = {value};
         try {
             boost::any result;
             semantic->parse(result, args, false);
@@ -230,11 +230,11 @@ class ConfigManager {
             processing.insert(key);
 
             std::string result = value;
-            std::regex pattern(R"(\$\{([^}]+)\})");
+            const std::regex pattern(R"(\$\{([^}]+)\})");
             std::smatch match;
 
             while (std::regex_search(result, match, pattern)) {
-                std::string placeholder = match[1].str();
+                const std::string placeholder = match[1].str();
                 std::string replacement;
 
                 if (map_full.contains(placeholder)) {

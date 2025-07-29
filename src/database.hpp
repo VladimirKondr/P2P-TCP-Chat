@@ -115,9 +115,6 @@ class PostgresDatabase : public IDatabaseService {
 
     uint64_t GetCount() override {
         auto res = ExecuteQuery(R"(SELECT COUNT(*) FROM visits)");
-        if (res.empty() || res[0].size() == 0) {
-            return 0;
-        }
         return res[0][0].as<uint64_t>();
     }
 

@@ -20,8 +20,8 @@ class Server {
     Server(
         boost::asio::io_context& io_context, std::shared_ptr<IDatabaseService> db_service,
         std::shared_ptr<ISessionFactory> session_factory)
-        : db_(db_service)
-        , sf_(session_factory)
+        : db_(std::move(db_service))
+        , sf_(std::move(session_factory))
         , acceptor_(
               io_context, BoostTcp::endpoint(BoostTcp::v4(), GetConfig().GetCentralServerPort())) {
         db_->Initialize();
