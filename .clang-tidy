@@ -39,8 +39,9 @@ Checks: >
   -readability-magic-numbers,
   -fuchsia-default-arguments-calls,
   -fuchsia-overloaded-operator,
-  -fuchsia-default-arguments-declarations
-HeaderFilterRegex: '\.(h|hpp|tpp)$'
+  -fuchsia-default-arguments-declarations,
+  -misc-include-cleaner
+HeaderFilterRegex: '^.*/src/.*\.(h|hpp|tpp)$'
 WarningsAsErrors: '*'
 CheckOptions:
   - key: readability-identifier-naming.NamespaceCase

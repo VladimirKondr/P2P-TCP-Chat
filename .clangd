@@ -12,9 +12,7 @@ Index:
   Background: Build
 
 Diagnostics:
-  ClangTidy:
-    Add: modernize*,performance*,readability*
-    Remove: modernize-use-trailing-return-type
+  ClangTidy: {}
 
 InlayHints:
   Enabled: Yes
@@ -23,6 +21,4 @@ InlayHints:
 
 Hover:
   ShowAKA: Yes
-Ignore:
-  - .clangd-ignore
 

@@ -2,6 +2,8 @@
 helper.md
 jira_tickets.csv
 P2PTCPChat_configuration_20250710.txt
+*.env
+
 
 # Created by https://www.toptal.com/developers/gitignore/api/dart,flutter,c++,bazel,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=dart,flutter,c++,bazel,macos
@@ -182,3 +184,4 @@ Temporary Items
 *.icloud
 
 # End of https://www.toptal.com/developers/gitignore/api/dart,flutter,c++,bazel,macos
+!.env.example

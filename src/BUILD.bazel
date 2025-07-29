@@ -1,19 +1,77 @@
-common_copts = ["-std=c++20"]
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+
+common_copts = [
+    "-std=c++20",
+    "-fexceptions",
+    "-frtti",
+    "-g3",
+    "-ggdb3", 
+    "-gdwarf-4",
+    "-O0",
+    "-fno-omit-frame-pointer"
+] + select({
+    "//conditions:default": [
+        "-DDEBUG",
+    ],
+})
+
+common_linkopts = [
+    "-g3",
+    "-ggdb3", 
+    "-gdwarf-4",
+]
+
 
 cc_binary(
     name = "main",
-    srcs = ["main.cpp"],
+    srcs = ["main.cpp", "config.cpp", "config.hpp"],
+    copts = common_copts,
+    linkopts = common_linkopts,
     deps = [
         "@boost.asio",
+        "@boost.program_options",
     ],
-    copts = common_copts,
 )
+
 
 cc_binary(
     name = "app",
-    srcs = ["main.cpp"],
+    srcs = ["app.cpp", "config.cpp", "session.hpp", "server.hpp", "database.hpp", "config.hpp"],
+    data = ["//:config"],
+    copts = common_copts + [
+        "-Wall",
+        "-Wextra",
+    ] + select({
+        "@platforms//os:macos": [
+            "-I/usr/local/include",
+        ],
+        "@platforms//os:linux": [
+            "-I/usr/include/postgresql",
+            "-I/usr/local/include",
+        ],
+        "//conditions:default": [
+            "-I/usr/local/include",
+        ],
+    }),
     deps = [
         "@boost.asio",
+        "@boost.system", 
+        "@boost.program_options",
     ],
-    copts = common_copts,
+    linkopts = common_linkopts + select({
+        "@platforms//os:macos": [
+            "-L/usr/local/lib",
+            "-lpqxx",
+        ],
+        "@platforms//os:linux": [
+            "-L/usr/lib/x86_64-linux-gnu",
+            "-L/usr/local/lib",
+            "-lpqxx",
+        ],
+        "//conditions:default": [
+            "-L/usr/local/lib",
+            "-lpqxx",
+        ],
+    }),
 )

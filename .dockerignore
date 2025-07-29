@@ -1,0 +1,17 @@
+# Git
+.git
+.gitignore
+
+# Bazel artifacts
+bazel-*
+
+# Docker
+docker/
+
+# IDE / Editor config
+.idea/
+.vscode/
+
+# Local build/test files
+*.out
+*.log

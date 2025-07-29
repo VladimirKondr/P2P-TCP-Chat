@@ -1,10 +1,10 @@
 cc_test(
     name = "test_gtest",
     srcs = ["test_gtest.cpp"],
+    copts = ["-std=c++20"],
     deps = [
         "@boost.asio",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
-    copts = ["-std=c++20"]
 )

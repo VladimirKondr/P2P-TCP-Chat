@@ -1,3 +1,4 @@
+QueryDriver: /usr/bin/g++
 If:
   PathMatch: .*\.(cpp|hpp|h)$
 CompileFlags:

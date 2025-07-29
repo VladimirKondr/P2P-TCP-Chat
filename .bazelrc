@@ -1,11 +1,19 @@
 common --enable_bzlmod
-build --repo_env=CC=clang
-build --repo_env=CXX=clang++
+common --disk_cache=~/.cache/bazel-disk-cache
+common --repository_cache=~/.cache/bazel-repo-cache
+build --repo_env=CC=gcc
+build --repo_env=CXX=g++
 
 
-#build --disk_cache=~/.cache/shared_bazel_action_cache/
-#test --disk_cache=~/.cache/shared_bazel_action_cache/
-#run --disk_cache=~/.cache/shared_bazel_action_cache/
+
+build --experimental_repository_cache_hardlinks
+build --remote_cache_compression
+build --remote_cache_async
+build --noexperimental_check_output_files
+
+build --action_env=PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig
+build --action_env=PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
+
 
 
 test --test_verbose_timeout_warnings
@@ -14,9 +22,14 @@ build --cxxopt='-std=c++2b'
 test --cxxopt='-std=c++2b'
 run --cxxopt='-std=c++2b'
 
-build --cxxopt="-O3"
-test --cxxopt="-O3"
-run --cxxopt="-O3"
+build:release --cxxopt="-O3"
+test:release --cxxopt="-O3"
+run:release --cxxopt="-O3"
+
+# Default to no optimization for regular builds
+build --cxxopt="-O1"
+test --cxxopt="-O1"
+run --cxxopt="-O1"
 
 build --cxxopt='-Wno-pragma-once-outside-header'
 test --cxxopt='-Wno-pragma-once-outside-header'
@@ -99,8 +112,8 @@ build:msan --copt -fsanitize-memory-track-origins=2
 build:msan --copt -DADDRESS_SANITIZER
 build:msan --copt -fno-omit-frame-pointer
 build:msan --linkopt -fsanitize=memory
-build:msan --action_env=clang-18
-build:msan --action_env=clang++-18
+build:msan --action_env=gcc
+build:msan --action_env=g++
 build:msan --action_env=CXXFLAGS=-stdlib=libc++
 build:msan --action_env=BAZEL_CXXOPTS=-stdlib=libc++
 build:msan --action_env=BAZEL_LINKLIBS=-lc++:-lc++abi:-lm
@@ -143,8 +156,8 @@ test:debug --test_timeout=9999
 # Docs: https://bazel.build/docs/user-manual#cache-test-results
 #test:debug --nocache_test_results
 
-build:debug --copt -O2
-test:debug --copt -O2
+build:debug --copt -O0
+test:debug --copt -O0
 
 build:debug --copt -g
 test:debug --copt -g
@@ -152,11 +165,16 @@ test:debug --copt -g
 build:debug -c dbg
 test:debug -c dbg
 
-build:debug --copt -DNDEBUG
-test:debug --copt -DNDEBUG
+# Remove NDEBUG for debug builds to enable assertions
+# build:debug --copt -DNDEBUG
+# test:debug --copt -DNDEBUG
 
 build:debug --strip=never
 test:debug --strip=never
+
+# Disable static linking to avoid conflicts with PIE
+build:debug --features=-static_linking_mode
+build:debug --features=-static_link_cpp_runtimes
 
 build:debug --cxxopt='-Wno-error=unused-variable'
 test:debug --cxxopt='-Wno-error=unused-variable'
@@ -207,6 +225,16 @@ build:ci --keep_going
 build:ci --verbose_failures
 build:ci --test_output=errors
 test:ci --test_env=CI
+
+# Fix linking issues in CI by disabling problematic static linking
+build:ci --features=-static_linking_mode
+build:ci --features=-static_link_cpp_runtimes
+build:ci --dynamic_mode=fully
+
+# CI-specific cache configuration
+# These will be overridden by command line arguments in GitHub Actions
+common:ci --disk_cache=/home/runner/.cache/bazel-disk-cache
+common:ci --repository_cache=/home/runner/.cache/bazel-repo-cache
 
 # Setup compiler flags - required for Qt6 is at least C++17
 build:gcc9 --cxxopt=-std=c++2a

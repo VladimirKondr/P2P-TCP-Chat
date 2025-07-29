@@ -1,3 +1,6 @@
+load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+
+
 filegroup(
     name = "clang_tidy_config",
     srcs = [".clang-tidy"],
@@ -10,9 +13,15 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+filegroup(
+    name = "config",
+    srcs = [".config"],
+    visibility = ["//visibility:public"],
+)
 
 refresh_compile_commands(
     name = "refresh_compile_commands",
-    exclude_headers = "all",
+    exclude_external_sources = True,
+    exclude_headers = "external"
 )
+
