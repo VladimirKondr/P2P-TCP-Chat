@@ -172,10 +172,9 @@ test:debug -c dbg
 build:debug --strip=never
 test:debug --strip=never
 
-
-# Force debug info to stay in the binary (don't strip)
-build:debug --linkopt -Wl,-no_compact_unwind
-test:debug --linkopt -Wl,-no_compact_unwind
+# Disable static linking to avoid conflicts with PIE
+build:debug --features=-static_linking_mode
+build:debug --features=-static_link_cpp_runtimes
 
 build:debug --cxxopt='-Wno-error=unused-variable'
 test:debug --cxxopt='-Wno-error=unused-variable'
@@ -226,6 +225,11 @@ build:ci --keep_going
 build:ci --verbose_failures
 build:ci --test_output=errors
 test:ci --test_env=CI
+
+# Fix linking issues in CI by disabling problematic static linking
+build:ci --features=-static_linking_mode
+build:ci --features=-static_link_cpp_runtimes
+build:ci --dynamic_mode=fully
 
 # CI-specific cache configuration
 # These will be overridden by command line arguments in GitHub Actions

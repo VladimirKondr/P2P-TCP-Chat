@@ -8,9 +8,9 @@ module(
 )
 
 
-bazel_dep(name = "protobuf", version = "3.19.0")
+bazel_dep(name = "protobuf", version = "29.0")
 bazel_dep(name = "postgres", version = "16.2")
-bazel_dep(name = "boost.asio", version = "1.87.0")
+bazel_dep(name = "boost.asio", version = "1.87.0.bcr.1")
 bazel_dep(name = "boost.program_options", version = "1.87.0")
 bazel_dep(name = "boost.filesystem", version = "1.87.0")
 bazel_dep(name = "boost.algorithm", version = "1.87.0")
@@ -20,7 +20,7 @@ bazel_dep(name = "boost.json", version = "1.87.0")
 bazel_dep(name = "boost.beast", version = "1.87.0")
 bazel_dep(name = "boost.uuid", version = "1.87.0")
 bazel_dep(name = "boost.system", version = "1.87.0")
-bazel_dep(name = "rules_python", version = "0.35.0")
+bazel_dep(name = "rules_python", version = "0.40.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
@@ -29,8 +29,8 @@ python.toolchain(
 )
 
 bazel_dep(name = "rules_go", version = "0.50.1")
-bazel_dep(name = "rules_cc", version = "0.0.10")
-bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 
 # cpp lib
