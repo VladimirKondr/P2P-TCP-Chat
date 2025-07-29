@@ -2,8 +2,6 @@
 
 #include "config.hpp"
 
-#include <boost/json/object.hpp>
-
 #include <condition_variable>
 #include <cstdint>
 #include <exception>
