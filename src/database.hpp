@@ -1,15 +1,15 @@
 #pragma once
 
+#include "config.hpp"
+
 #include <condition_variable>
 #include <cstdint>
-#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
 #include <mutex>
 #include <pqxx/pqxx>
 #include <queue>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -96,44 +96,27 @@ class IDatabaseService {
 
     virtual void Initialize() = 0;
 
-    virtual pqxx::result ExecuteQuery(const std::string& query) = 0;
+    virtual void MarkVisit() = 0;
+
+    virtual uint64_t GetCount() = 0;
 };
 
 class PostgresDatabase : public IDatabaseService {
    public:
-    static constexpr uint64_t kDefaultNumConnections = 10;
-
-    // TODO(vladimirkondratyonok): [PTC-68]: fix using config class
-    // NOLINTBEGIN(concurrency-mt-unsafe)
-    explicit PostgresDatabase(uint64_t num_connections = kDefaultNumConnections)
-        : conn_pool_(num_connections, [] {
-            const char* conn_str = std::getenv("DB_CONN_STRING");
-            if (conn_str == nullptr || *conn_str == '\0') {
-                throw std::runtime_error("The environment variable DB_CONN_STRING must be set.");
-            }
-            return std::string(conn_str);
-        }()) {
+    explicit PostgresDatabase(uint64_t num_connections = 0)
+        : conn_pool_(
+              num_connections > 0 ? num_connections : GetConfig().GetConnectionPoolSize(),
+              GetConfig().GetDbConnString()) {
     }
 
-    // NOLINTEND(concurrency-mt-unsafe)
-
-    // TODO(vladimirkondratyonok): [PTC-67]: database shouldn't return pqxx::result. It should
-    // return json object with data.
-    pqxx::result ExecuteQuery(const std::string& query) override {
-        auto conn = conn_pool_.Acquire();
-        pqxx::work transaction(*conn);
-        const pqxx::result res = transaction.exec(query);
-        transaction.commit();
-        return res;
+    void MarkVisit() override {
+        ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
     }
 
-    // // Execute a query without expecting results (INSERT, UPDATE, DELETE)
-    // void ExecuteCommand(const std::string& command) {
-    //     auto conn = conn_pool_.Acquire();
-    //     pqxx::work transaction(*conn);
-    //     pqxx::result res = transaction.exec(command);
-    //     transaction.commit();
-    // }
+    uint64_t GetCount() override {
+        auto res = ExecuteQuery(R"(SELECT COUNT(*) FROM visits)");
+        return res[0][0].as<uint64_t>();
+    }
 
     void Initialize() override {
         ExecuteQuery(R"(CREATE TABLE IF NOT EXISTS visits (
@@ -143,5 +126,13 @@ class PostgresDatabase : public IDatabaseService {
     }
 
    private:
+    pqxx::result ExecuteQuery(const std::string& query) {
+        auto conn = conn_pool_.Acquire();
+        pqxx::work transaction(*conn);
+        const pqxx::result res = transaction.exec(query);
+        transaction.commit();
+        return res;
+    }
+
     ConnectionPool conn_pool_;
 };

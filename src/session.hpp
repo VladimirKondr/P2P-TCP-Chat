@@ -77,11 +77,7 @@ class Session : public ISession {
 
     void DoWrite() {
         auto self = shared_from_this();
-        auto result = db_->ExecuteQuery("SELECT COUNT(*) FROM visits");
-        int visit_count = 0;
-        if (!result.empty()) {
-            visit_count = result[0][0].as<int>();
-        }
+        const uint64_t visit_count = db_->GetCount();
 
         const std::string body = "Hello, world! Visits: " + std::to_string(visit_count);
         std::string response =

@@ -5,30 +5,40 @@ common_copts = [
     "-std=c++20",
     "-fexceptions",
     "-frtti",
-    "-g",
-    "-ggdb3",
+    "-g3",
+    "-ggdb3", 
+    "-gdwarf-4",
     "-O0",
-    "-fno-omit-frame-pointer",
+    "-fno-omit-frame-pointer"
 ] + select({
     "//conditions:default": [
         "-DDEBUG",
     ],
 })
 
+common_linkopts = [
+    "-g3",
+    "-ggdb3", 
+    "-gdwarf-4",
+]
+
 
 cc_binary(
     name = "main",
-    srcs = ["main.cpp"],
+    srcs = ["main.cpp", "config.cpp", "config.hpp"],
     copts = common_copts,
+    linkopts = common_linkopts,
     deps = [
         "@boost.asio",
+        "@boost.program_options",
     ],
 )
 
 
 cc_binary(
     name = "app",
-    srcs = ["app.cpp", "session.hpp", "server.hpp", "database.hpp"],
+    srcs = ["app.cpp", "config.cpp", "session.hpp", "server.hpp", "database.hpp", "config.hpp"],
+    data = ["//:config"],
     copts = common_copts + [
         "-Wall",
         "-Wextra",
@@ -46,9 +56,10 @@ cc_binary(
     }),
     deps = [
         "@boost.asio",
-        "@boost.system",
+        "@boost.system", 
+        "@boost.program_options",
     ],
-    linkopts = select({
+    linkopts = common_linkopts + select({
         "@platforms//os:macos": [
             "-L/usr/local/lib",
             "-lpqxx",
