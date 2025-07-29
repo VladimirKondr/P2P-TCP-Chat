@@ -100,67 +100,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  backend-lint:
-    name: Backend Lint & Format
-    runs-on: ubuntu-latest
-    needs: build-docker
-    container:
-      image: ${{ needs.build-docker.outputs.image_name }}
-      options: --user 1001
-    env:
-      BAZEL_DISK_CACHE_DIR: /home/runner/.cache/bazel-disk-cache
-      BAZEL_REPO_CACHE_DIR: /home/runner/.cache/bazel-repo-cache
-      BAZEL_STARTUP_OPTS: "--host_jvm_args=-Xmx2g"
-      USE_BAZEL_VERSION: "7.0.0"
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-      
-      - name: Cache Bazel
-        uses: actions/cache@v4
-        with:
-          path: |
-            /home/runner/.cache/bazel-disk-cache
-            /home/runner/.cache/bazel-repo-cache
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl', 'src/**', 'tests/**') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel', '**/MODULE.bazel', '**/WORKSPACE', '**/*.bzl') }}
-            ${{ runner.os }}-bazel-lint-
-            ${{ runner.os }}-bazel-
-      
-      - name: Cache Bazel Workspace
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/bazel/_bazel_*/install
-            ~/.cache/bazel/_bazel_*/execroot/*/external
-          key: ${{ runner.os }}-bazel-workspace-${{ hashFiles('**/MODULE.bazel', '**/MODULE.bazel.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-workspace-
-      
-      - name: Create cache directories
-        run: |
-          echo "Creating cache directories for backend-lint..."
-          echo "BAZEL_DISK_CACHE_DIR: ${BAZEL_DISK_CACHE_DIR}"
-          echo "BAZEL_REPO_CACHE_DIR: ${BAZEL_REPO_CACHE_DIR}"
-          mkdir -p "${BAZEL_DISK_CACHE_DIR}"
-          mkdir -p "${BAZEL_REPO_CACHE_DIR}"
-          mkdir -p ~/.cache/bazelisk
-          mkdir -p ~/.cache/bazel
-          # Ensure proper permissions and ownership
-          chown -R 1001:1001 /home/runner/.cache || true
-          chown -R 1001:1001 ~/.cache || true
-          chmod -R 755 /home/runner/.cache || true
-          chmod -R 755 ~/.cache || true
-      
-      - name: Check Code Formatting (clang-format)
-        run: bazel test --config=ci --config=clang-format //...
-
-      - name: Run Static Analysis (clang-tidy)
-        run: bazel test --config=ci --config=clang-tidy //...
-
   backend-build-and-test:
     name: Backend Build & Test (${{ matrix.config }})
     runs-on: ubuntu-latest
@@ -176,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [debug, asan, ubsan, tsan]
+        config: [debug, asan, ubsan, tsan, clang-tidy, clang-format]
     steps:
       - name: Check out code
         uses: actions/checkout@v4
