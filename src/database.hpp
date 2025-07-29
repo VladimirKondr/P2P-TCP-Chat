@@ -1,17 +1,17 @@
 #pragma once
 
+#include "config.hpp"
+
 #include <boost/json/object.hpp>
 
 #include <condition_variable>
 #include <cstdint>
-#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
 #include <mutex>
 #include <pqxx/pqxx>
 #include <queue>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -105,21 +105,10 @@ class IDatabaseService {
 
 class PostgresDatabase : public IDatabaseService {
    public:
-    static constexpr uint64_t kDefaultNumConnections = 10;
-
-    // TODO(vladimirkondratyonok): [PTC-68]: fix using config class
-    // NOLINTBEGIN(concurrency-mt-unsafe)
-    explicit PostgresDatabase(uint64_t num_connections = kDefaultNumConnections)
-        : conn_pool_(num_connections, [] {
-            const char* conn_str = std::getenv("DB_CONN_STRING");
-            if (conn_str == nullptr || *conn_str == '\0') {
-                throw std::runtime_error("The environment variable DB_CONN_STRING must be set.");
-            }
-            return std::string(conn_str);
-        }()) {
+    explicit PostgresDatabase(uint64_t num_connections = 0)
+        : conn_pool_(num_connections > 0 ? num_connections : GetConfig().GetConnectionPoolSize(), 
+                     GetConfig().GetDbConnString()) {
     }
-
-    // NOLINTEND(concurrency-mt-unsafe)
 
     void MarkVisit() override {
         auto res = ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
