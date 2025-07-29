@@ -172,12 +172,10 @@ test:debug -c dbg
 build:debug --strip=never
 test:debug --strip=never
 
-# Additional debug flags for better debugging experience
-build:debug --copt -ggdb3
-test:debug --copt -ggdb3
 
-build:debug --copt -fno-omit-frame-pointer
-test:debug --copt -fno-omit-frame-pointer
+# Force debug info to stay in the binary (don't strip)
+build:debug --linkopt -Wl,-no_compact_unwind
+test:debug --linkopt -Wl,-no_compact_unwind
 
 build:debug --cxxopt='-Wno-error=unused-variable'
 test:debug --cxxopt='-Wno-error=unused-variable'
