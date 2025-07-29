@@ -9,12 +9,12 @@
 int main() {
     try {
         InitializeConfig();
-        
+
         boost::asio::io_context io_context;
-        
+
         auto db_service = std::make_shared<PostgresDatabase>();
         db_service->Initialize();
-        
+
         auto session_factory = std::make_shared<SessionFactory>();
 
         Server s(io_context, db_service, session_factory);

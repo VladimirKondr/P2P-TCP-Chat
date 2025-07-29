@@ -106,16 +106,20 @@ class IDatabaseService {
 class PostgresDatabase : public IDatabaseService {
    public:
     explicit PostgresDatabase(uint64_t num_connections = 0)
-        : conn_pool_(num_connections > 0 ? num_connections : GetConfig().GetConnectionPoolSize(), 
-                     GetConfig().GetDbConnString()) {
+        : conn_pool_(
+              num_connections > 0 ? num_connections : GetConfig().GetConnectionPoolSize(),
+              GetConfig().GetDbConnString()) {
     }
 
     void MarkVisit() override {
-        auto res = ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
+        ExecuteQuery(R"(INSERT INTO visits (time) VALUES (NOW()))");
     }
 
     uint64_t GetCount() override {
         auto res = ExecuteQuery(R"(SELECT COUNT(*) FROM visits)");
+        if (res.empty() || res[0].size() == 0) {
+            return 0;
+        }
         return res[0][0].as<uint64_t>();
     }
 

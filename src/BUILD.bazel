@@ -9,10 +9,7 @@ common_copts = [
     "-ggdb3", 
     "-gdwarf-4",
     "-O0",
-    "-fno-omit-frame-pointer",
-    "-fno-limit-debug-info",
-    "-fdebug-macro",
-    "-fstandalone-debug",
+    "-fno-omit-frame-pointer"
 ] + select({
     "//conditions:default": [
         "-DDEBUG",

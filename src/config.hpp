@@ -164,7 +164,6 @@ class ConfigManager {
 
     static std::unordered_map<std::string, std::string> LoadEnv(
         const boost::program_options::options_description& dummy_desc) {
-
         std::unordered_set<std::string> valid_options;
         for (const auto& option : dummy_desc.options()) {
             valid_options.insert(option->long_name());
@@ -174,8 +173,7 @@ class ConfigManager {
         std::unordered_map<std::string, std::string> map_env;
 
         auto env_options = boost::program_options::parse_environment(
-            dummy_desc,
-            [&valid_options](const std::string& env_var_name) -> std::string {
+            dummy_desc, [&valid_options](const std::string& env_var_name) -> std::string {
                 if (valid_options.contains(env_var_name)) {
                     return env_var_name;
                 }
