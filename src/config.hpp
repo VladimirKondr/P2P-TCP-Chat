@@ -10,6 +10,115 @@
 #include <unordered_set>
 
 /**
+ * @brief Интерфейс для управления конфигурацией приложения
+ *
+ * Определяет базовый контракт для получения конфигурационных параметров
+ * различных типов с поддержкой значений по умолчанию.
+ */
+class IConfigManager {
+   public:
+    virtual ~IConfigManager() = default;
+    
+    // Запрещаем копирование и перемещение для интерфейса
+    IConfigManager(const IConfigManager&) = delete;
+    IConfigManager& operator=(const IConfigManager&) = delete;
+    IConfigManager(IConfigManager&&) = delete;
+    IConfigManager& operator=(IConfigManager&&) = delete;
+
+   protected:
+    IConfigManager() = default;
+
+   public:
+    /**
+     * @brief Устанавливает значение конфигурационного параметра
+     *
+     * @param name Имя параметра
+     * @param value Значение параметра в виде строки
+     */
+    virtual void Put(const std::string& name, const std::string& value) = 0;
+
+    /**
+     * @brief Проверяет наличие параметра в конфигурации
+     *
+     * @param name Имя параметра
+     * @return true если параметр существует и не пустой, false иначе
+     */
+    [[nodiscard]] virtual bool Has(const std::string& name) const = 0;
+
+    /**
+     * @brief Получает строковое значение параметра
+     *
+     * @param name Имя параметра
+     * @param default_value Значение по умолчанию, если параметр отсутствует
+     * @return std::string Значение параметра или значение по умолчанию
+     */
+    [[nodiscard]] virtual std::string GetString(
+        const std::string& name, const std::string& default_value) const = 0;
+    
+    /**
+     * @brief Получает строковое значение параметра с пустым значением по умолчанию
+     *
+     * @param name Имя параметра
+     * @return std::string Значение параметра или пустая строка
+     */
+    [[nodiscard]] std::string GetString(const std::string& name) const {
+        return GetString(name, "");
+    }
+
+    /**
+     * @brief Получает целочисленное значение параметра
+     *
+     * @param name Имя параметра
+     * @param default_value Значение по умолчанию, если параметр отсутствует
+     * @return int Значение параметра или значение по умолчанию
+     */
+    [[nodiscard]] virtual int GetInt(const std::string& name, int default_value) const = 0;
+    
+    /**
+     * @brief Получает целочисленное значение параметра с нулевым значением по умолчанию
+     *
+     * @param name Имя параметра
+     * @return int Значение параметра или 0
+     */
+    [[nodiscard]] int GetInt(const std::string& name) const {
+        return GetInt(name, 0);
+    }
+
+    /**
+     * @brief Получает логическое значение параметра
+     *
+     * @param name Имя параметра
+     * @param default_value Значение по умолчанию, если параметр отсутствует
+     * @return bool Значение параметра или значение по умолчанию
+     */
+    [[nodiscard]] virtual bool GetBool(const std::string& name, bool default_value) const = 0;
+    
+    /**
+     * @brief Получает логическое значение параметра с false по умолчанию
+     *
+     * @param name Имя параметра
+     * @return bool Значение параметра или false
+     */
+    [[nodiscard]] bool GetBool(const std::string& name) const {
+        return GetBool(name, false);
+    }
+
+    // Методы для получения специфичных параметров приложения
+    [[nodiscard]] virtual int GetCentralServerPort() const = 0;
+    [[nodiscard]] virtual std::string GetCentralServerHost() const = 0;
+    [[nodiscard]] virtual std::string GetCentralServerAddress() const = 0;
+    [[nodiscard]] virtual std::string GetDbHost() const = 0;
+    [[nodiscard]] virtual std::string GetDbUser() const = 0;
+    [[nodiscard]] virtual std::string GetDbPassword() const = 0;
+    [[nodiscard]] virtual std::string GetDbName() const = 0;
+    [[nodiscard]] virtual int GetDbPort() const = 0;
+    [[nodiscard]] virtual std::string GetDbConnString() const = 0;
+    [[nodiscard]] virtual std::string GetLogLevel() const = 0;
+    [[nodiscard]] virtual int GetConnectionPoolSize() const = 0;
+    [[nodiscard]] virtual std::string GetConfigFilePath() const = 0;
+};
+
+/**
  * @brief Центральный менеджер конфигурации приложения
  *
  * Класс ConfigManager предоставляет универсальный интерфейс для управления
@@ -22,8 +131,52 @@
  * - Типобезопасное получение значений
  * - Значения по умолчанию для отсутствующих параметров
  */
-class ConfigManager {
+class ConfigManager : public IConfigManager {
    public:
+    /**
+     * @brief Конструктор по умолчанию
+     */
+    ConfigManager() = default;
+
+    /**
+     * @brief Инициализирует менеджер конфигурации из файла
+     *
+     * @param config_file Путь к файлу конфигурации
+     */
+    explicit ConfigManager(const std::string& config_file) {
+        Initialize(config_file);
+    }
+
+    /**
+     * @brief Инициализирует менеджер конфигурации
+     *
+     * Может быть вызван для переинициализации конфигурации с новым файлом.
+     *
+     * @param config_file Путь к файлу конфигурации
+     */
+    void Initialize(const std::string& config_file) {
+        desc_.add_options()(
+            "CENTRAL_SERVER_HOST", boost::program_options::value<std::string>(),
+            "Host of the central server")(
+            "CENTRAL_SERVER_PORT", boost::program_options::value<int>(),
+            "Port of the central server")(
+            "CENTRAL_SERVER_ADDRESS", boost::program_options::value<std::string>(),
+            "Full address of the central server")(
+            "DB_HOST", boost::program_options::value<std::string>(), "Database host")(
+            "DB_USER", boost::program_options::value<std::string>(), "Database user")(
+            "DB_PASSWORD", boost::program_options::value<std::string>(), "Database password")(
+            "DB_NAME", boost::program_options::value<std::string>(),
+            "Database name")("DB_PORT", boost::program_options::value<int>(), "Database port")(
+            "DB_CONN_STRING", boost::program_options::value<std::string>(),
+            "Complete database connection string")(
+            "LOG_LEVEL", boost::program_options::value<std::string>(), "Logging level")(
+            "CONNECTION_POOL_SIZE", boost::program_options::value<int>(),
+            "Size of the database connection pool")(
+            "CONFIG_FILE_PATH", boost::program_options::value<std::string>(),
+            "Path to the configuration file");
+        LoadConfig(config_file);
+    }
+
     /**
      * @brief Получает значение конфигурационного параметра с приведением к указанному типу
      *
@@ -52,7 +205,7 @@ class ConfigManager {
      * @param name Имя параметра
      * @param value Значение параметра в виде строки
      */
-    void Put(const std::string& name, const std::string& value) {
+    void Put(const std::string& name, const std::string& value) override {
         vm_.insert(std::make_pair(name, boost::program_options::variable_value(value, false)));
     }
 
@@ -62,7 +215,7 @@ class ConfigManager {
      * @param name Имя параметра
      * @return true если параметр существует и не пустой, false иначе
      */
-    [[nodiscard]] bool Has(const std::string& name) const {
+    [[nodiscard]] bool Has(const std::string& name) const override {
         return vm_.contains(name) && !vm_[name].empty();
     }
 
@@ -74,7 +227,7 @@ class ConfigManager {
      * @return std::string Значение параметра или значение по умолчанию
      */
     [[nodiscard]] std::string GetString(
-        const std::string& name, const std::string& default_value = "") const {
+        const std::string& name, const std::string& default_value) const override {
         return Has(name) ? Get<std::string>(name) : default_value;
     }
 
@@ -85,7 +238,7 @@ class ConfigManager {
      * @param default_value Значение по умолчанию, если параметр отсутствует
      * @return int Значение параметра или значение по умолчанию
      */
-    [[nodiscard]] int GetInt(const std::string& name, int default_value = 0) const {
+    [[nodiscard]] int GetInt(const std::string& name, int default_value) const override {
         return Has(name) ? Get<int>(name) : default_value;
     }
 
@@ -96,51 +249,13 @@ class ConfigManager {
      * @param default_value Значение по умолчанию, если параметр отсутствует
      * @return bool Значение параметра или значение по умолчанию
      */
-    [[nodiscard]] bool GetBool(const std::string& name, bool default_value = false) const {
+    [[nodiscard]] bool GetBool(const std::string& name, bool default_value) const override {
         return Has(name) ? Get<bool>(name) : default_value;
     }
 
    private:
     boost::program_options::variables_map vm_;  ///< Карта переменных конфигурации
     boost::program_options::options_description desc_{"Configuration"};  ///< Описание опций
-    friend ConfigManager& GetConfig();
-    friend void InitializeConfig(const std::string& config_file);
-
-    /**
-     * @brief Инициализирует менеджер конфигурации
-     *
-     * Настраивает доступные опции конфигурации и загружает значения
-     * из указанного файла с поддержкой интерполяции переменных.
-     *
-     * @param config_file Путь к файлу конфигурации
-     */
-    void Initialize(const std::string& config_file) {
-        desc_.add_options()(
-            "CENTRAL_SERVER_HOST", boost::program_options::value<std::string>(),
-            "Host of the central server")(
-            "CENTRAL_SERVER_PORT", boost::program_options::value<int>(),
-            "Port of the central server")(
-            "CENTRAL_SERVER_ADDRESS", boost::program_options::value<std::string>(),
-            "Full address of the central server")(
-            "DB_HOST", boost::program_options::value<std::string>(), "Database host")(
-            "DB_USER", boost::program_options::value<std::string>(), "Database user")(
-            "DB_PASSWORD", boost::program_options::value<std::string>(), "Database password")(
-            "DB_NAME", boost::program_options::value<std::string>(),
-            "Database name")("DB_PORT", boost::program_options::value<int>(), "Database port")(
-            "DB_CONN_STRING", boost::program_options::value<std::string>(),
-            "Complete database connection string")(
-            "LOG_LEVEL", boost::program_options::value<std::string>(), "Logging level")(
-            "CONNECTION_POOL_SIZE", boost::program_options::value<int>(),
-            "Size of the database connection pool")(
-            "CONFIG_FILE_PATH", boost::program_options::value<std::string>(),
-            "Path to the configuration file");
-        LoadConfig(config_file);
-    }
-
-    /**
-     * @brief Конструктор по умолчанию (приватный для паттерна Singleton)
-     */
-    ConfigManager() = default;
 
     /**
      * @brief Загружает конфигурацию из файла
@@ -450,7 +565,7 @@ class ConfigManager {
      *
      * @return int Порт сервера или значение по умолчанию (8000)
      */
-    [[nodiscard]] int GetCentralServerPort() const {
+    [[nodiscard]] int GetCentralServerPort() const override {
         return GetInt("CENTRAL_SERVER_PORT", kDefaultCentralServerPort);
     }
 
@@ -459,7 +574,7 @@ class ConfigManager {
      *
      * @return std::string Хост сервера или "localhost" по умолчанию
      */
-    [[nodiscard]] std::string GetCentralServerHost() const {
+    [[nodiscard]] std::string GetCentralServerHost() const override {
         return GetString("CENTRAL_SERVER_HOST", "localhost");
     }
 
@@ -470,8 +585,8 @@ class ConfigManager {
      *
      * @return std::string Полный адрес в формате "host:port"
      */
-    [[nodiscard]] std::string GetCentralServerAddress() const {
-        std::string address = GetString("CENTRAL_SERVER_ADDRESS");
+    [[nodiscard]] std::string GetCentralServerAddress() const override {
+        std::string address = GetString("CENTRAL_SERVER_ADDRESS", "");
         if (address.empty()) {
             return GetCentralServerHost() + ":" + std::to_string(GetCentralServerPort());
         }
@@ -483,7 +598,7 @@ class ConfigManager {
      *
      * @return std::string Хост БД или "localhost" по умолчанию
      */
-    [[nodiscard]] std::string GetDbHost() const {
+    [[nodiscard]] std::string GetDbHost() const override {
         return GetString("DB_HOST", "localhost");
     }
 
@@ -492,7 +607,7 @@ class ConfigManager {
      *
      * @return std::string Имя пользователя или "postgres" по умолчанию
      */
-    [[nodiscard]] std::string GetDbUser() const {
+    [[nodiscard]] std::string GetDbUser() const override {
         return GetString("DB_USER", "postgres");
     }
 
@@ -501,8 +616,8 @@ class ConfigManager {
      *
      * @return std::string Пароль БД (может быть пустым)
      */
-    [[nodiscard]] std::string GetDbPassword() const {
-        return GetString("DB_PASSWORD");
+    [[nodiscard]] std::string GetDbPassword() const override {
+        return GetString("DB_PASSWORD", "");
     }
 
     /**
@@ -510,7 +625,7 @@ class ConfigManager {
      *
      * @return std::string Имя БД или "p2p_chat" по умолчанию
      */
-    [[nodiscard]] std::string GetDbName() const {
+    [[nodiscard]] std::string GetDbName() const override {
         return GetString("DB_NAME", "p2p_chat");
     }
 
@@ -519,7 +634,7 @@ class ConfigManager {
      *
      * @return int Порт БД или 5432 по умолчанию (стандартный порт PostgreSQL)
      */
-    [[nodiscard]] int GetDbPort() const {
+    [[nodiscard]] int GetDbPort() const override {
         return GetInt("DB_PORT", kDefaultDbPort);
     }
 
@@ -531,8 +646,8 @@ class ConfigManager {
      *
      * @return std::string Строка подключения PostgreSQL
      */
-    [[nodiscard]] std::string GetDbConnString() const {
-        std::string conn_str = GetString("DB_CONN_STRING");
+    [[nodiscard]] std::string GetDbConnString() const override {
+        std::string conn_str = GetString("DB_CONN_STRING", "");
         if (conn_str.empty()) {
             return "postgresql://" + GetDbUser() + ":" + GetDbPassword() + "@" + GetDbHost() + ":" +
                    std::to_string(GetDbPort()) + "/" + GetDbName();
@@ -545,7 +660,7 @@ class ConfigManager {
      *
      * @return std::string Уровень логирования или "INFO" по умолчанию
      */
-    [[nodiscard]] std::string GetLogLevel() const {
+    [[nodiscard]] std::string GetLogLevel() const override {
         return GetString("LOG_LEVEL", "INFO");
     }
 
@@ -554,7 +669,7 @@ class ConfigManager {
      *
      * @return int Размер пула соединений или 10 по умолчанию
      */
-    [[nodiscard]] int GetConnectionPoolSize() const {
+    [[nodiscard]] int GetConnectionPoolSize() const override {
         return GetInt("CONNECTION_POOL_SIZE", kDefaultConnectionPoolSize);
     }
 
@@ -563,30 +678,7 @@ class ConfigManager {
      *
      * @return std::string Путь к файлу конфигурации или ".config" по умолчанию
      */
-    [[nodiscard]] std::string GetConfigFilePath() const {
+    [[nodiscard]] std::string GetConfigFilePath() const override {
         return GetString("CONFIG_FILE_PATH", ".config");
     }
 };
-
-/**
- * @brief Получает глобальный экземпляр менеджера конфигурации (Singleton)
- *
- * @return ConfigManager& Ссылка на единственный экземпляр ConfigManager
- */
-inline ConfigManager& GetConfig() {
-    static ConfigManager instance;
-    return instance;
-}
-
-/**
- * @brief Инициализирует глобальную конфигурацию из файла
- *
- * Должна быть вызвана один раз в начале работы приложения
- * для загрузки конфигурации из указанного файла.
- *
- * @param config_file Путь к файлу конфигурации (по умолчанию ".config")
- */
-inline void InitializeConfig(const std::string& config_file = ".config") {
-    auto& config = GetConfig();
-    config.Initialize(config_file);
-}
