@@ -20,23 +20,20 @@
 /**
  * @brief Демонстрационная функция для проверки конфигурации
  *
- * Инициализирует конфигурацию и выводит основные параметры:
+ * Создает менеджер конфигурации через dependency injection и выводит основные параметры:
  * - Порт сервера
  * - Хост базы данных
  *
  * @return int Код возврата (всегда 0)
  */
 int main() {
-    // Инициализируем конфигурацию из файла .config
-    InitializeConfig();
-
-    // Получаем глобальный экземпляр конфигурации
-    auto& config = GetConfig();
+    // Создаем менеджер конфигурации и инициализируем его из файла .config
+    auto config_manager = std::make_shared<ConfigManager>(".config");
 
     // Выводим демонстрационную информацию
     std::cout << "Hello^ world!\n";
-    std::cout << "Server will run on port: " << config.GetCentralServerPort() << "\n";
-    std::cout << "Database host: " << config.GetDbHost() << "\n";
+    std::cout << "Server will run on port: " << config_manager->GetCentralServerPort() << "\n";
+    std::cout << "Database host: " << config_manager->GetDbHost() << "\n";
 
     return 0;
 }

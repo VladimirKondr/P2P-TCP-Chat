@@ -23,30 +23,34 @@ using BoostTcp = boost::asio::ip::tcp;  ///< Псевдоним для TCP пр�
  * - Создает новые сессии для каждого клиента
  * - Интегрируется с базой данных для отслеживания посещений
  * - Использует паттерн Factory для создания сессий
+ * - Получает конфигурацию через dependency injection
  *
  * Сервер работает в асинхронном режиме на основе boost::asio::io_context.
  */
 class Server {
    public:
     /**
-     * @brief Конструктор сервера
+     * @brief Конструктор сервера с dependency injection
      *
      * Создает и настраивает TCP сервер для прослушивания входящих соединений.
      * Инициализирует базу данных и начинает прием соединений.
      *
      * @param io_context Контекст ввода-вывода boost::asio для асинхронных операций
+     * @param config_manager Менеджер конфигурации для получения настроек сервера
      * @param db_service Сервис базы данных для хранения информации о посещениях
      * @param session_factory Фабрика для создания новых сессий клиентов
      *
-     * @note Порт для прослушивания берется из конфигурации (GetConfig().GetCentralServerPort())
+     * @note Порт для прослушивания берется из внедренного менеджера конфигурации
      */
     Server(
-        boost::asio::io_context& io_context, std::shared_ptr<IDatabaseService> db_service,
+        boost::asio::io_context& io_context, std::shared_ptr<IConfigManager> config_manager,
+        std::shared_ptr<IDatabaseService> db_service,
         std::shared_ptr<ISessionFactory> session_factory)
-        : db_(std::move(db_service))
+        : config_(std::move(config_manager))
+        , db_(std::move(db_service))
         , sf_(std::move(session_factory))
         , acceptor_(
-              io_context, BoostTcp::endpoint(BoostTcp::v4(), GetConfig().GetCentralServerPort())) {
+              io_context, BoostTcp::endpoint(BoostTcp::v4(), config_->GetCentralServerPort())) {
         db_->Initialize();  // Инициализируем базу данных (создаем таблицы если нужно)
         DoAccept();         // Начинаем принимать соединения
     }
@@ -80,7 +84,8 @@ class Server {
         });
     }
 
-    std::shared_ptr<IDatabaseService> db_;  ///< Сервис базы данных
-    std::shared_ptr<ISessionFactory> sf_;   ///< Фабрика сессий
-    BoostTcp::acceptor acceptor_;           ///< Акцептор TCP соединений
+    std::shared_ptr<IConfigManager> config_;   ///< Менеджер конфигурации
+    std::shared_ptr<IDatabaseService> db_;      ///< Сервис базы данных
+    std::shared_ptr<ISessionFactory> sf_;       ///< Фабрика сессий
+    BoostTcp::acceptor acceptor_;               ///< Акцептор TCP соединений
 };

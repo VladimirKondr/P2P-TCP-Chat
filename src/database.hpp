@@ -215,23 +215,25 @@ class IDatabaseService {
  * - Использует пул соединений для эффективной работы в многопоточной среде
  * - Автоматически создает необходимые таблицы при инициализации
  * - Поддерживает транзакции для обеспечения целостности данных
- * - Получает параметры подключения из конфигурации
+ * - Получает параметры подключения через dependency injection конфигурации
  */
 class PostgresDatabase : public IDatabaseService {
    public:
     /**
-     * @brief Конструктор с настройкой пула соединений
+     * @brief Конструктор с dependency injection конфигурации
      *
-     * @param num_connections Количество соединений в пуле (0 = использовать значение из
-     * конфигурации)
+     * @param config_manager Менеджер конфигурации для получения параметров подключения
+     * @param num_connections Количество соединений в пуле (0 = использовать значение из конфигурации)
      *
      * Если num_connections равно 0, размер пула берется из конфигурации.
-     * Строка подключения всегда берется из конфигурации.
+     * Строка подключения и размер пула берутся из внедренного менеджера конфигурации.
      */
-    explicit PostgresDatabase(uint64_t num_connections = 0)
-        : conn_pool_(
-              num_connections > 0 ? num_connections : GetConfig().GetConnectionPoolSize(),
-              GetConfig().GetDbConnString()) {
+    explicit PostgresDatabase(
+        std::shared_ptr<IConfigManager> config_manager, uint64_t num_connections = 0)
+        : config_(std::move(config_manager))
+        , conn_pool_(
+              num_connections > 0 ? num_connections : config_->GetConnectionPoolSize(),
+              config_->GetDbConnString()) {
     }
 
     /**
@@ -269,6 +271,9 @@ class PostgresDatabase : public IDatabaseService {
     }
 
    private:
+    std::shared_ptr<IConfigManager> config_;  ///< Менеджер конфигурации для получения параметров БД
+    ConnectionPool conn_pool_;                 ///< Пул соединений с базой данных
+
     /**
      * @brief Выполняет SQL запрос с использованием транзакции
      *
@@ -286,6 +291,4 @@ class PostgresDatabase : public IDatabaseService {
         transaction.commit();                              // Подтверждаем транзакцию
         return res;
     }
-
-    ConnectionPool conn_pool_;  ///< Пул соединений с базой данных
 };

@@ -26,9 +26,11 @@ common_linkopts = [
 cc_binary(
     name = "main",
     srcs = ["main.cpp", "config.cpp", "config.hpp"],
+    data = ["//:config"],
     copts = common_copts,
     linkopts = common_linkopts,
     deps = [
+        "//src/boost:di_lib",
         "@boost.asio",
         "@boost.program_options",
     ],

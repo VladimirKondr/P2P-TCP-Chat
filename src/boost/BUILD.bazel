@@ -1,0 +1,5 @@
+cc_library(
+    name = "di_lib",
+    srcs = ["di.hpp"],
+    visibility = ["//visibility:public"],
+)
